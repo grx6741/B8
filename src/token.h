@@ -3,6 +3,8 @@
 
 #define MAX_IDENTIFIER_NAME_LEN 255
 
+#define kTokenInvalid kTokenCount
+
 typedef enum {
     kTokenInt, kTokenIf,
     kTokenIdentifier, kTokenNumber,

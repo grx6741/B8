@@ -11,6 +11,7 @@ int main() {
 
     while (LexerHasMoreTokens(&L)) {
 	token = LexerNextToken(&L);
+	LogToken(token);
     }
 
     fclose(f);

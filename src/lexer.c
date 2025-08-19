@@ -1,9 +1,13 @@
 #include "lexer.h"
-#include "ctype.h"
 
 #define LOG_ENABLED 1
 #define LOG_PREFIX "LEXER"
 #include "util.h"
+
+#include "ctype.h"
+#include "string.h"
+#include "math.h"
+#include "stdlib.h"
 
 // Public
 
@@ -11,7 +15,7 @@ lexer_t Lexer(FILE* fd)
 {
     return (lexer_t) {
 	.fd = fd,
-	.row = 0, .col = 0
+	.row = 1, .col = 1
     };
 }
 
@@ -29,31 +33,99 @@ token_t LexerNextToken(lexer_t* L)
 {
     skipWhitespace(L);
 
-    char c = fgetc(L->fd);
-    token_t tok;
-    if (c == EOF) {
-	tok = NEW_TOKEN(kTokenEOF, .row = L->row, .col = L->col);
-    } else {
-	tok = NEW_TOKEN(kTokenIdentifier, .row = L->row, .col = L->col);
-	tok.name[0] = c;
-	tok.name[1] = 0;
+    char c = getChar(L);
+
+    if (c == '/') {
+	// Can be comment
+	char next = getChar(L);
+	if (next == '/') {
+	    // Skip entire line, cuz this is a comment
+	    while (getChar(L) != '\n');
+	    L->row += 1;
+	    L->col = 1;
+
+	    return LexerNextToken(L);
+	}
+	ungetChar(L, next);
+	// Can be a Division Operator. Not supported for now
     }
+    else if (isalpha(c)) {
+	char id_name[MAX_IDENTIFIER_NAME_LEN];
+	size_t id_name_len = 0;
+	while (isalnum(c)) {
+	    // TODO : Will Cause Buffer overflow if the identifier
+	    // name is more than 'MAX_IDENTIFIER_NAME_LEN'
+	    id_name[id_name_len++] = c;
+	    c = getChar(L);
+	}
+	id_name[id_name_len] = '\0';
 
-    LogToken(tok);
+	if (strcmp(id_name, "If") == 0) 
+	    return NEW_TOKEN(kTokenIf,	.row = L->row, .col = L->col);
+	if (strcmp(id_name, "int") == 0) 
+	    return NEW_TOKEN(kTokenInt,	.row = L->row, .col = L->col);
 
-    return tok;
+	token_t token = NEW_TOKEN(kTokenIdentifier, .row = L->row, .col = L->col);
+	strncpy(token.name, id_name, MAX_IDENTIFIER_NAME_LEN);
+
+	return token;
+    }
+    else if (isdigit(c)) {
+	char number[MAX_IDENTIFIER_NAME_LEN];
+	size_t number_len = 0;
+	while (isdigit(c)) {
+	    // TODO : Will Cause Buffer overflow if the identifier
+	    // name is more than 'MAX_IDENTIFIER_NAME_LEN'
+	    number[number_len++] = c;
+	    c = getChar(L);
+	}
+	number[number_len] = '\0';
+
+	// TODO : Better Error Handling
+	return NEW_TOKEN(kTokenNumber, .value = strtol(number, NULL, 10), .row = L->row, .col = L->col);
+    }
+    else if (c == '=') {
+	char next = getChar(L);
+	if (next == '=')
+	    return NEW_TOKEN(kTokenCompareEquals, .row = L->row, .col = L->col);
+	ungetChar(L, next);
+	return NEW_TOKEN(kTokenAssign, .row = L->row, .col = L->col);
+    }
+    else if (c == '(') return NEW_TOKEN(kTokenOpenParen,    .row = L->row, .col = L->col);
+    else if (c == ')') return NEW_TOKEN(kTokenCloseParen,   .row = L->row, .col = L->col);
+    else if (c == '{') return NEW_TOKEN(kTokenOpenParen,    .row = L->row, .col = L->col);
+    else if (c == '}') return NEW_TOKEN(kTokenCloseParen,   .row = L->row, .col = L->col);
+    else if (c == ';') return NEW_TOKEN(kTokenSemiColon,    .row = L->row, .col = L->col);
+    else if (c == '+') return NEW_TOKEN(kTokenPlus,	    .row = L->row, .col = L->col);
+    else if (c == EOF) return NEW_TOKEN(kTokenEOF,	    .row = L->row, .col = L->col);
+
+    return NEW_TOKEN(kTokenInvalid, .row = L->row, .col = L->col, .name = { c });
 }
 
 // Private
 
 void skipWhitespace(lexer_t* L)
 {
-    char c = fgetc(L->fd);
+    char c = getChar(L);
     while (c != EOF && isspace(c)) {
-	L->col += 1;
-	if (c == '\n')
+	if (c == '\n') {
 	    L->row += 1;
-	c = fgetc(L->fd);
+	    L->col = 1;
+	}
+	c = getChar(L);
     }
+    ungetChar(L, c);
+}
+
+char getChar(lexer_t* L)
+{
+    char c = fgetc(L->fd);
+    L->col += 1;
+    return c;
+}
+
+void ungetChar(lexer_t* L, char c)
+{
     ungetc(c, L->fd);
+    L->col -= 1;
 }

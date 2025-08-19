@@ -19,3 +19,5 @@ token_t LexerNextToken(lexer_t* L);
 
 // Private
 void skipWhitespace(lexer_t* L);
+char getChar(lexer_t* L);
+void ungetChar(lexer_t* L, char c);

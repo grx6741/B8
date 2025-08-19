@@ -9,6 +9,6 @@ b = 20;
 c = a + b; 
 
 // Conditional 
-if (c == 30) { 
+if (c == 30) {
     c = c + 1; 
 } 

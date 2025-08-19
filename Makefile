@@ -5,7 +5,8 @@ SRC = src/main.c \
 OBJ = $(SRC:src/%.c=bin/%.o)
 TARGET = b8
 
-CFLAGS = -ggdb
+CFLAGS   = -ggdb
+LD_FLAGS = -lm
 
 run: $(TARGET)
 	./$(TARGET)
@@ -13,7 +14,7 @@ run: $(TARGET)
 all: clean run
 
 $(TARGET): $(OBJ)
-	gcc -o $@ $^ $(CFLAGS)
+	gcc -o $@ $^ $(CFLAGS) $(LD_FLAGS)
 
 bin/%.o: src/%.c | bin
 	gcc -c -o $@ $< $(CFLAGS)
