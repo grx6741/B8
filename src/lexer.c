@@ -52,6 +52,7 @@ token_t LexerNextToken(lexer_t* L)
     else if (isalpha(c)) {
 	char id_name[MAX_IDENTIFIER_NAME_LEN];
 	size_t id_name_len = 0;
+	int start_col = L->col - 1;
 	while (isalnum(c)) {
 	    // TODO : Will Cause Buffer overflow if the identifier
 	    // name is more than 'MAX_IDENTIFIER_NAME_LEN'
@@ -59,13 +60,14 @@ token_t LexerNextToken(lexer_t* L)
 	    c = getChar(L);
 	}
 	id_name[id_name_len] = '\0';
+	ungetChar(L, c);
 
-	if (strcmp(id_name, "If") == 0) 
-	    return NEW_TOKEN(kTokenIf,	.row = L->row, .col = L->col);
+	if (strcmp(id_name, "if") == 0) 
+	    return NEW_TOKEN(kTokenIf,	.row = L->row, .col = start_col);
 	if (strcmp(id_name, "int") == 0) 
-	    return NEW_TOKEN(kTokenInt,	.row = L->row, .col = L->col);
+	    return NEW_TOKEN(kTokenInt,	.row = L->row, .col = start_col);
 
-	token_t token = NEW_TOKEN(kTokenIdentifier, .row = L->row, .col = L->col);
+	token_t token = NEW_TOKEN(kTokenIdentifier, .row = L->row, .col = start_col);
 	strncpy(token.name, id_name, MAX_IDENTIFIER_NAME_LEN);
 
 	return token;
@@ -73,6 +75,7 @@ token_t LexerNextToken(lexer_t* L)
     else if (isdigit(c)) {
 	char number[MAX_IDENTIFIER_NAME_LEN];
 	size_t number_len = 0;
+	int start_col = L->col - 1;
 	while (isdigit(c)) {
 	    // TODO : Will Cause Buffer overflow if the identifier
 	    // name is more than 'MAX_IDENTIFIER_NAME_LEN'
@@ -80,24 +83,25 @@ token_t LexerNextToken(lexer_t* L)
 	    c = getChar(L);
 	}
 	number[number_len] = '\0';
+	ungetChar(L, c);
 
 	// TODO : Better Error Handling
-	return NEW_TOKEN(kTokenNumber, .value = strtol(number, NULL, 10), .row = L->row, .col = L->col);
+	return NEW_TOKEN(kTokenNumber, .value = strtol(number, NULL, 10), .row = L->row, .col = start_col);
     }
     else if (c == '=') {
 	char next = getChar(L);
 	if (next == '=')
-	    return NEW_TOKEN(kTokenCompareEquals, .row = L->row, .col = L->col);
+	    return NEW_TOKEN(kTokenCompareEquals, .row = L->row, .col = L->col - 2);
 	ungetChar(L, next);
-	return NEW_TOKEN(kTokenAssign, .row = L->row, .col = L->col);
+	return NEW_TOKEN(kTokenAssign, .row = L->row, .col = L->col - 1);
     }
-    else if (c == '(') return NEW_TOKEN(kTokenOpenParen,    .row = L->row, .col = L->col);
-    else if (c == ')') return NEW_TOKEN(kTokenCloseParen,   .row = L->row, .col = L->col);
-    else if (c == '{') return NEW_TOKEN(kTokenOpenParen,    .row = L->row, .col = L->col);
-    else if (c == '}') return NEW_TOKEN(kTokenCloseParen,   .row = L->row, .col = L->col);
-    else if (c == ';') return NEW_TOKEN(kTokenSemiColon,    .row = L->row, .col = L->col);
-    else if (c == '+') return NEW_TOKEN(kTokenPlus,	    .row = L->row, .col = L->col);
-    else if (c == EOF) return NEW_TOKEN(kTokenEOF,	    .row = L->row, .col = L->col);
+    else if (c == '(') return NEW_TOKEN(kTokenOpenParen,    .row = L->row, .col = L->col - 1);
+    else if (c == ')') return NEW_TOKEN(kTokenCloseParen,   .row = L->row, .col = L->col - 1);
+    else if (c == '{') return NEW_TOKEN(kTokenOpenBrace,    .row = L->row, .col = L->col - 1);
+    else if (c == '}') return NEW_TOKEN(kTokenCloseBrace,   .row = L->row, .col = L->col - 1);
+    else if (c == ';') return NEW_TOKEN(kTokenSemiColon,    .row = L->row, .col = L->col - 1);
+    else if (c == '+') return NEW_TOKEN(kTokenPlus,	    .row = L->row, .col = L->col - 1);
+    else if (c == EOF) return NEW_TOKEN(kTokenEOF,	    .row = L->row, .col = L->col - 1);
 
     return NEW_TOKEN(kTokenInvalid, .row = L->row, .col = L->col, .name = { c });
 }
