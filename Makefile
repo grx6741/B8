@@ -1,6 +1,8 @@
 SRC = src/main.c \
       src/lexer.c \
-      src/token.c
+      src/token.c \
+      src/ast.c \
+      src/parser.c
 
 OBJ = $(SRC:src/%.c=bin/%.o)
 TARGET = b8

@@ -1,0 +1,12 @@
+program	    := stmt_list
+stmt_list   := stmt*
+stmt	    := decl | assign | if | block
+block	    := '{' stmt_list '}'
+
+decl	    := 'int' identifier ';'
+assign	    := identifier '=' expr ';'
+expr	    := (value op value) | value
+if	    := 'if' '(' expr ')' stmt
+
+value	    := identifier | constant
+op	    := '+' | '-' | '*' | '/'
