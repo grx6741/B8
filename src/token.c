@@ -13,6 +13,7 @@ void LogToken(token_t token)
 	case kTokenNumber:	  LOG_INFO("TokenNumber[%d, %d] :: %d\n", token.row, token.col, (int)token.value); break;
 	case kTokenAssign:	  LOG_INFO("TokenAssign[%d, %d]\n", token.row, token.col); break;
 	case kTokenPlus:	  LOG_INFO("TokenPlus[%d, %d]\n", token.row, token.col); break;
+	case kTokenMinus:	  LOG_INFO("TokenMinus[%d, %d]\n", token.row, token.col); break;
 	case kTokenCompareEquals: LOG_INFO("TokenCompareEquals[%d, %d]\n", token.row, token.col); break;
 	case kTokenOpenParen:	  LOG_INFO("TokenOpenParen[%d, %d]\n", token.row, token.col); break;
 	case kTokenCloseParen:	  LOG_INFO("TokenCloseParen[%d, %d]\n", token.row, token.col); break;
@@ -21,5 +22,26 @@ void LogToken(token_t token)
 	case kTokenSemiColon:	  LOG_INFO("TokenSemiColon[%d, %d]\n", token.row, token.col); break;
 	case kTokenEOF:		  LOG_INFO("TokenEOF[%d, %d]\n", token.row, token.col); break;
 	case kTokenCount:	  LOG_INFO("Invalid Token[%d, %d] %c\n", token.row, token.col, token.name[0]); break;
+    }
+}
+
+const char* TokenTypeToStr(TokenType type)
+{
+    switch (type) {
+	case kTokenInt: return "kTokenInt";
+	case kTokenIf: return "kTokenIf";
+	case kTokenIdentifier: return "kTokenIdentifier";
+	case kTokenNumber: return "kTokenNumber";
+	case kTokenAssign: return "kTokenAssign"; 
+	case kTokenPlus: return "kTokenPlus"; 
+	case kTokenMinus: return "kTokenMinus"; 
+	case kTokenCompareEquals: return "kTokenCompareEquals";
+	case kTokenOpenParen: return "kTokenOpenParen"; 
+	case kTokenCloseParen: return "kTokenCloseParen";
+	case kTokenOpenBrace: return "kTokenOpenBrace"; 
+	case kTokenCloseBrace: return "kTokenCloseBrace";
+	case kTokenSemiColon: return "kTokenSemiColon";
+	case kTokenEOF: return "kTokenEOF";
+	case kTokenCount: return "kTokenCount";
     }
 }

@@ -3,10 +3,11 @@ int a;
 int b; 
 int c; 
 
-// // Assignment 
-// a = 10; 
-// b = 20; 
-// c = a + b; 
+// Assignment 
+a = 10; 
+b = 20; 
+c = a + b; 
+a = c - b;
 // 
 // // Conditional 
 // if (c == 30) {

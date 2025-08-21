@@ -101,6 +101,7 @@ token_t LexerNextToken(lexer_t* L)
     else if (c == '}') return NEW_TOKEN(kTokenCloseBrace,   .row = L->row, .col = L->col - 1);
     else if (c == ';') return NEW_TOKEN(kTokenSemiColon,    .row = L->row, .col = L->col - 1);
     else if (c == '+') return NEW_TOKEN(kTokenPlus,	    .row = L->row, .col = L->col - 1);
+    else if (c == '-') return NEW_TOKEN(kTokenMinus,	    .row = L->row, .col = L->col - 1);
     else if (c == EOF) return NEW_TOKEN(kTokenEOF,	    .row = L->row, .col = L->col - 1);
 
     return NEW_TOKEN(kTokenInvalid, .row = L->row, .col = L->col, .name = { c });

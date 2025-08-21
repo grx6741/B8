@@ -24,11 +24,12 @@ struct ast_node_t {
 	struct {
 	    ast_node_t* lhs; // value node
 	    ast_node_t* rhs; // value node
+	    enum { kBinaryAdd, kBinarySubtract} op;
 	} binary_op;
 	struct {
 	    union {
-		char identifier[MAX_IDENTIFIER_NAME_LEN];
-		uint8_t value;
+		char name[MAX_IDENTIFIER_NAME_LEN];
+		uint8_t constant;
 	    };
 	} value;
     };
@@ -36,4 +37,5 @@ struct ast_node_t {
     ast_node_t* next; // Linked List of Nodes
 };
 
-ast_node_t* new_ast_node(ASTnodeType type);
+ast_node_t* ASTnode(ASTnodeType type);
+void ASTnodeLog(ast_node_t* node, int indent_level);

@@ -5,7 +5,8 @@ block	    := '{' stmt_list '}'
 
 decl	    := 'int' identifier ';'
 assign	    := identifier '=' expr ';'
-expr	    := (value op value) | value
+expr	    := value expr_
+expr_	    := (op value) | <empty>
 if	    := 'if' '(' expr ')' stmt
 
 value	    := identifier | constant

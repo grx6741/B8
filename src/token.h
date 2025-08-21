@@ -8,7 +8,7 @@
 typedef enum {
     kTokenInt, kTokenIf,
     kTokenIdentifier, kTokenNumber,
-    kTokenAssign, kTokenPlus, kTokenCompareEquals,
+    kTokenAssign, kTokenPlus, kTokenMinus, kTokenCompareEquals,
     kTokenOpenParen, kTokenCloseParen,
     kTokenOpenBrace, kTokenCloseBrace,
     kTokenSemiColon,
@@ -30,3 +30,4 @@ typedef struct {
     (token_t) { .type = _type, __VA_ARGS__ }
 
 void LogToken(token_t token);
+const char* TokenTypeToStr(TokenType type);
