@@ -7,6 +7,7 @@
 #endif // LOG_PREFIX
 
 #if LOG_ENABLED
+    #define LOG(...)		printf( __VA_ARGS__)
     #define LOG_INFO(...)	printf( "[ INFO :: " LOG_PREFIX " ] " __VA_ARGS__)
     #define LOG_WARN(...)	printf( "[ WARN :: " LOG_PREFIX " ] " __VA_ARGS__)
     #define LOG_ERROR(...)	printf( "[ ERR  :: " LOG_PREFIX " ] " __VA_ARGS__)
