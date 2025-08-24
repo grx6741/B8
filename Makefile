@@ -9,13 +9,13 @@ TARGET = b8
 CFLAGS   = -ggdb
 LD_FLAGS = -lm
 
+run: $(TARGET)
+	./$(TARGET)
+
 test: $(OBJ) src/test.c
 	gcc -c -o bin/test.o src/test.c
 	gcc -o bin/test $(OBJ) bin/test.o $(CFLAGS) $(LD_FLAGS)
 	./bin/test
-
-run: $(TARGET)
-	./$(TARGET)
 
 all: clean run test
 

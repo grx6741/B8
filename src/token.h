@@ -8,7 +8,11 @@
 typedef enum {
     kTokenInt, kTokenIf,
     kTokenIdentifier, kTokenNumber,
-    kTokenAssign, kTokenPlus, kTokenMinus, kTokenCompareEquals,
+    kTokenAssign,
+    kTokenPlus, kTokenMinus,
+    kTokenCompareEquals, kTokenCompareNotEquals,
+    kTokenCompareLessThan, kTokenCompareLessThanEquals,
+    kTokenCompareGreaterThan, kTokenCompareGreaterThanEquals,
     kTokenOpenParen, kTokenCloseParen,
     kTokenOpenBrace, kTokenCloseBrace,
     kTokenSemiColon,

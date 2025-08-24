@@ -95,6 +95,28 @@ token_t LexerNextToken(lexer_t* L)
 	ungetChar(L, next);
 	return NEW_TOKEN(kTokenAssign, .row = L->row, .col = L->col - 1);
     }
+    else if (c == '>') {
+	char next = getChar(L);
+	if (next == '=')
+	    return NEW_TOKEN(kTokenCompareGreaterThanEquals, .row = L->row, .col = L->col - 2);
+	ungetChar(L, next);
+	return NEW_TOKEN(kTokenCompareGreaterThan, .row = L->row, .col = L->col - 1);
+    }
+    else if (c == '<') {
+	char next = getChar(L);
+	if (next == '=')
+	    return NEW_TOKEN(kTokenCompareLessThanEquals, .row = L->row, .col = L->col - 2);
+	ungetChar(L, next);
+	return NEW_TOKEN(kTokenCompareLessThan, .row = L->row, .col = L->col - 1);
+    }
+    else if (c == '!') {
+	char next = getChar(L);
+	if (next == '=')
+	    return NEW_TOKEN(kTokenCompareNotEquals, .row = L->row, .col = L->col - 2);
+	ungetChar(L, next);
+	// TODO : When '!' unary support is to be added, add it here
+	return NEW_TOKEN(kTokenInvalid, .row = L->row, .col = L->col - 1);
+    }
     else if (c == '(') return NEW_TOKEN(kTokenOpenParen,    .row = L->row, .col = L->col - 1);
     else if (c == ')') return NEW_TOKEN(kTokenCloseParen,   .row = L->row, .col = L->col - 1);
     else if (c == '{') return NEW_TOKEN(kTokenOpenBrace,    .row = L->row, .col = L->col - 1);

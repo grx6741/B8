@@ -28,7 +28,7 @@ void ASTnodeLog(ast_node_t* node, int indent_level)
 		break;
 	    case kASTnodeBinaryOp:
 		LOG_INFO("%*s%s\n", indent_level * 4, "",
-			curr->binary_op.op == kBinaryAdd ? "Add" : "Sub");
+			ASTnodeBinaryTypeToString(curr->binary_op.op));
 		ASTnodeLog(curr->binary_op.lhs, indent_level + 1);
 		ASTnodeLog(curr->binary_op.rhs, indent_level + 1);
 		break;
@@ -40,8 +40,35 @@ void ASTnodeLog(ast_node_t* node, int indent_level)
 		LOG_INFO("%*sConst<%d>\n", indent_level * 4, 
 			"", curr->value.constant);
 		break;
+	    case kASTnodeIf:
+		LOG_INFO("%*sIf: \n", indent_level * 4, 
+			"", curr->value.constant);
+		ASTnodeLog(curr->if_block.condition, indent_level + 1);
+		LOG_INFO("%*sThen: \n", indent_level * 4, 
+			"", curr->value.constant);
+		ASTnodeLog(curr->if_block.block, indent_level + 1);
+		LOG_INFO("%*sEndif: \n", indent_level * 4, 
+			"", curr->value.constant);
+		break;
 	}
 
 	curr = curr->next;
     }
+}
+
+const char* ASTnodeBinaryTypeToString(ASTnodeBinaryType type)
+{
+    switch (type) {
+	case kBinaryAdd:    return "kBinaryAdd";
+	case kBinarySub:    return "kBinarySub";
+	case kBinaryEQ:	    return "kBinaryEq";
+	case kBinaryLT:	    return "kBinaryLt";
+	case kBinaryLE:    return "kBinaryLte";
+	case kBinaryGT:	    return "kBinaryGt";
+	case kBinaryGE:    return "kBinaryGte";
+	case kBinaryNE:	    return "kBinaryNe";
+	default:	    return "kBinaryInvalid";
+    }
+
+    return NULL;
 }

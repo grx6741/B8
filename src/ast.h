@@ -8,7 +8,22 @@ typedef enum {
     kASTnodeBinaryOp,
     kASTnodeIdentifier,
     kASTnodeConstant,
+    kASTnodeIf,
 } ASTnodeType;
+
+typedef enum 
+{ 
+    kBinaryAdd, // +
+    kBinarySub, // -
+    kBinaryLT,	// <
+    kBinaryLE,	// <=
+    kBinaryGT,	// >
+    kBinaryGE,	// >=
+    kBinaryNE,	// !=
+    kBinaryEQ,	// =
+    kBinaryTypeCount
+} ASTnodeBinaryType;
+const char* ASTnodeBinaryTypeToString(ASTnodeBinaryType type);
 
 typedef struct ast_node_t ast_node_t;
 struct ast_node_t {
@@ -24,7 +39,7 @@ struct ast_node_t {
 	struct {
 	    ast_node_t* lhs; // value node
 	    ast_node_t* rhs; // value node
-	    enum { kBinaryAdd, kBinarySubtract} op;
+	    ASTnodeBinaryType op;
 	} binary_op;
 	struct {
 	    union {
@@ -32,6 +47,10 @@ struct ast_node_t {
 		uint8_t constant;
 	    };
 	} value;
+	struct {
+	    ast_node_t* condition;
+	    ast_node_t* block;
+	} if_block;
     };
 
     ast_node_t* next; // Linked List of Nodes

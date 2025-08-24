@@ -112,20 +112,31 @@ ast_node_t* ParseExpr(parser_t* P) {
 // expr_ := (op value) | <empty>
 ast_node_t* ParseExpr_(parser_t* P, ast_node_t* lhs) {
     LOG_INFO("Parsing Expr_\n");
-    if (peek(P).type != kTokenPlus && peek(P).type != kTokenMinus)
-	return lhs;
-
     ast_node_t* node = ASTnode(kASTnodeBinaryOp);
+    static TokenType token_to_op_table[kBinaryTypeCount] = {
+	[kBinaryAdd]	= kTokenPlus,
+	[kBinarySub]	= kTokenMinus,
+	[kBinaryLT]	= kTokenCompareLessThan,
+	[kBinaryLE]	= kTokenCompareLessThanEquals,
+	[kBinaryGT]	= kTokenCompareGreaterThan,
+	[kBinaryGE]	= kTokenCompareGreaterThanEquals,
+	[kBinaryEQ]	= kTokenCompareEquals,
+	[kBinaryNE]	= kTokenCompareNotEquals,
+    };
+
     node->binary_op.lhs = lhs;
-    if (peek(P).type == kTokenPlus) {
-	node->binary_op.op = kBinaryAdd;
-	CONSUME(P, kTokenPlus);
-    } else if (peek(P).type == kTokenMinus) {
-	node->binary_op.op = kBinarySubtract;
-	CONSUME(P, kTokenMinus);
-    } else {
-	LOG_ERROR("Invalid Binary Operator at %d,%d. Only +,- supported\n",
-		P->L->row, P->L->col);
+    bool valid_op = false;
+    for (int i = 0; i < kBinaryTypeCount; i++) {
+	if (peek(P).type == token_to_op_table[i]) {
+	    node->binary_op.op = i;
+	    CONSUME(P, token_to_op_table[i]);
+	    valid_op = true;
+	}
+    }
+
+    if (!valid_op) {
+	LOG_INFO("Didnt get a proper Operator, got %s\n", TokenTypeToStr(peek(P).type));
+	return lhs;
     }
 
     node->binary_op.rhs = ParseValue(P);
@@ -157,9 +168,37 @@ ast_node_t* ParseValue(parser_t* P) {
 	    P->L->row, P->L->col);
 }
 
-ast_node_t* ParseBlock(parser_t* P) { return NULL; }
+ast_node_t* ParseIf(parser_t* P) { 
+    LOG_INFO("Parsing If\n");
 
-ast_node_t* ParseIf(parser_t* P) { return NULL; }
+    CONSUME(P, kTokenIf);
+
+    CONSUME(P, kTokenOpenParen);
+
+    ast_node_t* condition = ParseExpr(P);
+
+    CONSUME(P, kTokenCloseParen);
+
+    ast_node_t* block = ParseBlock(P);
+
+    ast_node_t* if_block = ASTnode(kASTnodeIf);
+    if_block->if_block.condition = condition;
+    if_block->if_block.block = block;
+
+    return if_block;
+}
+
+ast_node_t* ParseBlock(parser_t* P) { 
+    LOG_INFO("Parsing Block\n");
+
+    CONSUME(P, kTokenOpenBrace);
+
+    ast_node_t* stmt_list = ParseStmtList(P);
+
+    CONSUME(P, kTokenCloseBrace);
+
+    return stmt_list;
+}
 
 // Private
 
@@ -176,5 +215,8 @@ token_t consume(parser_t* P, TokenType type, const char* caller) {
 
     token_t token = peek(P);
     P->curr = LexerNextToken(P->L);
+
+    LOG_INFO("Consumed %s\n", TokenTypeToStr(type));
+
     return token;
 }
