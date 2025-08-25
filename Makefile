@@ -1,7 +1,8 @@
 SRC = src/lexer.c \
       src/token.c \
       src/ast.c \
-      src/parser.c
+      src/parser.c \
+      src/ht.c
 
 OBJ = $(SRC:src/%.c=bin/%.o)
 TARGET = b8
@@ -9,15 +10,15 @@ TARGET = b8
 CFLAGS   = -ggdb
 LD_FLAGS = -lm
 
-run: $(TARGET)
-	./$(TARGET)
-
 test: $(OBJ) src/test.c
 	gcc -c -o bin/test.o src/test.c
 	gcc -o bin/test $(OBJ) bin/test.o $(CFLAGS) $(LD_FLAGS)
 	./bin/test
 
-all: clean run test
+run: $(TARGET)
+	./$(TARGET)
+
+all: clean test
 
 $(TARGET): $(OBJ) src/main.c
 	gcc -c -o bin/main.o src/main.c

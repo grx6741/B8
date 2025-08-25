@@ -10,9 +10,10 @@
 // a = c - b;
 
 // Conditional 
-if (c == 30) {
-    c = c + 1; 
-    if (a > 10) {
-	c = b + a;
-    }
-} 
+if (c > 20) {
+    if (a) {
+		c = c + 10;
+	} else {}
+} else {
+	c = c - 20;
+}

@@ -2,18 +2,19 @@
 
 #include "lexer.h"
 #include "parser.h"
+#include <assert.h>
 
-int main() {
+int main()
+{
+    FILE* f = fopen( "input.b8", "r" );
 
-    FILE* f = fopen("input.b8", "r");
+    lexer_t L = Lexer( f );
 
-    lexer_t L = Lexer(f);
+    parser_t P = Parser( &L );
+    ast_node_t* AST = ParseProgram( &P );
+    ASTnodeLog( AST, 0 );
 
-    parser_t P = Parser(&L);
-    ast_node_t* AST = ParseProgram(&P);
-    ASTnodeLog(AST, 0);
-
-    fclose(f);
+    fclose( f );
 
     return 0;
 }
