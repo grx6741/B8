@@ -27,6 +27,7 @@ void HTdelete( ht_t* HT )
 		if (!e) continue;
 
 		free(e->key);
+		free(e);
 	}
 
     free( HT->elements );
@@ -64,6 +65,8 @@ int __ht_alloc_and_insert(ht_t* HT, const char* key) {
 					assert(0 && "New HTelementType added, but didn't update this switch case");
 			}
 
+			free(e->key);
+			free(e);
 			HT->elements[i] = NULL;
 		}
 
@@ -106,17 +109,27 @@ void HTinsertCustom( ht_t* HT, const char* key, void* value )
 
 ht_element_t* HTlookup( ht_t* HT, const char* key )
 {
+    if (!HT->elements || HT->count == 0) {
+        return NULL;
+    }
+    
     size_t hash = __hash( ( unsigned char* ) key );
-    size_t index = hash % HT->size;
+    size_t start_index = hash % HT->size;
+    size_t index = start_index;
 
-	while (!(HT->elements[index]) || strncmp(key, 
-				   HT->elements[index]->key, 
-				   strlen(key)) != 0)
-	{
-		index = (index + 1) % HT->size;
-	}
-
-    return HT->elements[index];
+    do {
+        if (HT->elements[index] == NULL) {
+            return NULL;
+        }
+        
+        if (strcmp(key, HT->elements[index]->key) == 0) {
+            return HT->elements[index];
+        }
+        
+        index = (index + 1) % HT->size;
+    } while (index != start_index);
+    
+    return NULL;
 }
 
 void HTlog(ht_t* HT)

@@ -28,7 +28,7 @@ TEST( HashTableLookupMultiple )
 	LOG_INFO("\n");
 	const char* keys[] = { "1", "2", "3" };
 	for (int i = 0; i < 3; i++) {
-		HTinsertInt( &ht, keys[i], i );
+		HTinsertInt( &ht, keys[i], i + 1 );
 
 		HTlog(&ht);
 	}
