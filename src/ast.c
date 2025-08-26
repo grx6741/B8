@@ -1,7 +1,7 @@
 #include "ast.h"
 #include "stdlib.h"
 
-#define LOG_ENABLED 1
+#define LOG_ENABLED 0
 #define LOG_PREFIX "AST"
 #include "util.h"
 

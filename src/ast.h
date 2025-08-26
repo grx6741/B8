@@ -1,6 +1,7 @@
 #pragma once
 
 #include "token.h"
+#include <stdbool.h>
 
 typedef enum
 {
@@ -74,7 +75,8 @@ struct ast_node_t
         ASTvalueNode value;
         ASTifNode if_block;
     };
-    ast_node_t* next; // Linked List of Nodes
+    // Linked List of Nodes
+    ast_node_t* next;
 };
 
 ast_node_t* ASTnode( ASTnodeType type );

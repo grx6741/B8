@@ -1,6 +1,6 @@
 #include "parser.h"
 
-#define LOG_ENABLED 1
+#define LOG_ENABLED 0
 #define LOG_PREFIX "PARSER"
 #include "util.h"
 
