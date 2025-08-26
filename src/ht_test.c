@@ -1,26 +1,8 @@
-TEST( HashTableCreate )
-{
-    ht_t ht = HTcreate();
-    FAIL_IF_NOT( ht.size == HT_INIAL_SIZE, "Error Creating Hash Table" );
-
-    return TEST_PASSED();
-}
-
-TEST( HashTableDelete )
-{
-    ht_t ht = HTcreate();
-    HTdelete( &ht );
-    FAIL_IF_NOT( ht.elements == NULL, "Error Deleting Hash Table" );
-
-    return TEST_PASSED();
-}
-
 TEST( HashTableInsertOne )
 {
-    ht_t ht = HTcreate();
+    ht_t ht = {0};
 
-    static int abc = 2;
-    HTinsert( &ht, "abc", ( void* ) &abc );
+    HTinsertInt( &ht, "abc", 2 );
 
     FAIL_IF_NOT( ht.count == 1, "Error Inserting One Element" );
 
@@ -29,13 +11,30 @@ TEST( HashTableInsertOne )
 
 TEST( HashTableLookupOne )
 {
-    ht_t ht = HTcreate();
+    ht_t ht = { 0 };
 
-    int abc = 2;
-    HTinsert( &ht, "abc", ( void* ) &abc );
+    HTinsertInt( &ht, "abc", 2 );
 
-    FAIL_IF_NOT( *( int* ) ( HTlookup( &ht, "abc" )->value ) == 2,
+    FAIL_IF_NOT( HT_LOOKUP_INT( &ht, "abc" ) == 2,
                  "Did Not Get the same element back when inserting one element" );
 
     return TEST_PASSED();
+}
+
+TEST( HashTableLookupMultiple )
+{
+	ht_t ht = { .size = 4 };
+
+	LOG_INFO("\n");
+	const char* keys[] = { "1", "2", "3" };
+	for (int i = 0; i < 3; i++) {
+		HTinsertInt( &ht, keys[i], i );
+
+		HTlog(&ht);
+	}
+
+    FAIL_IF_NOT( HT_LOOKUP_INT( &ht, "1" ) == 1,
+                 "Expected 1");
+
+	return TEST_PASSED();
 }

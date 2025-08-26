@@ -5,12 +5,23 @@
 
 // My Hash Table Implementation
 
-#define HT_INIAL_SIZE 2
+#define HT_INITIAL_SIZE 2
+
+typedef enum
+{
+	kHTint,
+	kHTcustom,
+	kHTelementTypeCount
+} HTelementType;
 
 typedef struct
 {
+	HTelementType type;
     char* key;
-    void* value;
+	union {
+		int int_val;
+		void* custom_val;
+	};
 } ht_element_t;
 
 typedef struct
@@ -20,8 +31,15 @@ typedef struct
     size_t count;
 } ht_t;
 
-ht_t HTcreate();
 void HTdelete( ht_t* HT );
 
-void HTinsert( ht_t* HT, const char* key, void* value );
+void HTinsertInt( ht_t* HT, const char* key, int value );
+void HTinsertCustom( ht_t* HT, const char* key, void* value );
+
+#define HT_LOOKUP_INT(HT, key) \
+	(HTlookup( HT, key ))->int_val
+#define HT_LOOKUP_CUSTOM(HT, key) \
+	(HTlookup( HT, key ))->custom_val
 ht_element_t* HTlookup( ht_t* HT, const char* key );
+
+void HTlog(ht_t* HT);

@@ -1,6 +1,12 @@
 #include "ht.h"
 
 #include <stdlib.h>
+#include <assert.h>
+#include <string.h>
+
+#define LOG_ENABLED 1
+#define LOG_PREFIX "HT"
+#include "util.h"
 
 // http://www.cse.yorku.ca/~oz/hash.html
 size_t __hash( unsigned char* str )
@@ -14,31 +20,88 @@ size_t __hash( unsigned char* str )
     return hash;
 }
 
-ht_t HTcreate()
-{
-    return ( ht_t ) {
-        .elements = calloc( HT_INIAL_SIZE, sizeof( ht_element_t* ) ),
-        .size = HT_INIAL_SIZE,
-        .count = 0,
-    };
-}
-
 void HTdelete( ht_t* HT )
 {
+	for (int i = 0; i < HT->size; i++) {
+		ht_element_t* e = HT->elements[i];
+		if (!e) continue;
+
+		free(e->key);
+	}
+
     free( HT->elements );
     HT->elements = NULL;
 }
 
-void HTinsert( ht_t* HT, const char* key, void* value )
-{
+int __ht_alloc_and_insert(ht_t* HT, const char* key) {
+	// If the HT has no elements
+	if ( !(HT->elements) ) {
+        HT->size = HT->size == 0 ? HT_INITIAL_SIZE : HT->size;
+        HT->count = 0;
+        HT->elements = calloc( HT->size , sizeof( ht_element_t* ) );
+	}
+
+	// If the HT has more elements than 3/4ths of the total size
+	if ( HT->count >= (3 * HT->size / 4 ) ) {
+		// Move to a bigger HT
+		ht_t new_ht = (ht_t) { .size = HT->size * 2 };
+		for (int i = 0; i < HT->size; i++) {
+			ht_element_t* e = HT->elements[i];
+			if (!(e)) continue;
+
+			switch (e->type) {
+				case kHTint:
+					HTinsertInt(&new_ht, 
+								e->key, 
+								e->int_val);
+					break;
+				case kHTcustom:
+					HTinsertCustom(&new_ht, 
+								   e->key, 
+								   e->custom_val);
+					break;
+				default:
+					assert(0 && "New HTelementType added, but didn't update this switch case");
+			}
+
+			HT->elements[i] = NULL;
+		}
+
+		// Replace the new ht's elements with the original
+		free(HT->elements);
+		HT->elements = new_ht.elements;
+		HT->size = new_ht.size;
+		HT->count = new_ht.count;
+	}
+
     size_t hash = __hash( ( unsigned char* ) key );
     size_t index = hash % HT->size;
 
-    HT->elements[index] = malloc( sizeof( ht_element_t ) );
-    HT->elements[index]->key = ( char* ) key;
-    HT->elements[index]->value = value;
+	while ( HT->elements[index] ) {
+		index = (index + 1) % HT->size;
+	}
 
-    HT->count++;
+    HT->elements[index] = malloc( sizeof( ht_element_t ) );
+    HT->elements[index]->key = strdup(key);
+	HT->count++;
+
+	return index;
+}
+
+void HTinsertInt( ht_t* HT, const char* key, int value )
+{
+	int index = __ht_alloc_and_insert( HT, key );
+
+	HT->elements[index]->int_val = value;
+	HT->elements[index]->type = kHTint;
+}
+
+void HTinsertCustom( ht_t* HT, const char* key, void* value )
+{
+	int index = __ht_alloc_and_insert( HT, key );
+
+	HT->elements[index]->custom_val = value;
+	HT->elements[index]->type = kHTcustom;
 }
 
 ht_element_t* HTlookup( ht_t* HT, const char* key )
@@ -46,5 +109,32 @@ ht_element_t* HTlookup( ht_t* HT, const char* key )
     size_t hash = __hash( ( unsigned char* ) key );
     size_t index = hash % HT->size;
 
+	while (!(HT->elements[index]) || strncmp(key, 
+				   HT->elements[index]->key, 
+				   strlen(key)) != 0)
+	{
+		index = (index + 1) % HT->size;
+	}
+
     return HT->elements[index];
+}
+
+void HTlog(ht_t* HT)
+{
+	LOG_INFO("{\n");
+	for (int i = 0; i < HT->size; i++) {
+		ht_element_t* e = HT->elements[i];
+		if (!e) continue;
+		switch (e->type) {
+			case kHTint:
+				LOG_INFO("    %s : %d\n", e->key, e->int_val);
+			break;
+			case kHTcustom:
+				LOG_INFO("    %s : %p\n", e->key, e->custom_val);
+			break;
+			default:
+				assert(0 && "New HTelementType added, but didn't update this switch case");
+		}
+	}
+	LOG_INFO("} [%d/%d]\n", HT->count, HT->size);
 }
