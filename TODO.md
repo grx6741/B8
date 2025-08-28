@@ -1,0 +1,12 @@
+- Codegen
+    - Binary Op
+        - Arithmetic
+        - [x] Addition
+        - [x] Subtraction
+    - Comparision
+        - [ ] GT
+        - [ ] GTE
+        - [ ] LT
+        - [ ] LTE
+    - If
+        - [ ] Labels

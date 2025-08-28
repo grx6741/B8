@@ -80,8 +80,9 @@ int __ht_alloc_and_insert( ht_t* HT, const char* key )
     size_t index = hash % HT->size;
 
     while ( HT->elements[index] ) {
-        // if ( strcmp( HT->elements[index]->key, key ) )
-        //     break;
+        if ( strcmp( HT->elements[index]->key, key ) == 0 ) {
+            return index;
+        }
         index = ( index + 1 ) % HT->size;
     }
 

@@ -21,50 +21,83 @@ void __codegen_declaration( codegen_context_t* ctx, FILE* out_stream, const ast_
 void __codegen_assignment( codegen_context_t* ctx, FILE* out_stream, const ast_node_t* node )
 {
     scope_t* scope = &ctx->scope_stack[ctx->scope_stack_top];
+    const char* lhs_name = node->assignment.lhs;
+
+    assert( HTlookup( &scope->addr_table, lhs_name ) );
+    uint8_t lhs_addr = HT_LOOKUP_INT( &scope->addr_table, lhs_name );
+
     if ( node->assignment.rhs->type == kASTnodeBinaryOp ) {
-        // c = v op v
-        fprintf( out_stream, "NOT IMPLEMENTED: __codegen_assignment_with_binary_op* \n" );
+        // c = v1 op v2 || c1 op v2 || v1 op c2 || v1 + v2
+        // where v{1,2} is a variable and c{1,2} is a constant
+        // get c1,v1 and put it into A
+
+        ast_node_t* expr = node->assignment.rhs;
+        if ( expr->binary_op.lhs->type == kASTnodeIdentifier ) {
+            const char* v1_name = expr->binary_op.lhs->value.name;
+
+            assert( HTlookup( &scope->addr_table, v1_name ) );
+            uint8_t v1_addr = HT_LOOKUP_INT( &scope->addr_table, v1_name );
+
+            // Move value of first RHS var into A
+            fprintf( out_stream, "mov A M %d; 'A = M[%s]\n", v1_addr, v1_name );
+        }
+        else {
+            const int c1 = expr->binary_op.lhs->value.constant;
+
+            // Move the constant value into A
+            fprintf( out_stream, "ldi A %d\n", c1 );
+        }
+
+        // get c2,v2 and put it into B
+        if ( expr->binary_op.rhs->type == kASTnodeIdentifier ) {
+            const char* v2_name = expr->binary_op.rhs->value.name;
+
+            assert( HTlookup( &scope->addr_table, v2_name ) );
+            uint8_t v2_addr = HT_LOOKUP_INT( &scope->addr_table, v2_name );
+
+            // Move value of first RHS var into A
+            fprintf( out_stream, "mov B M %d; 'B = M[%s]\n", v2_addr, v2_name );
+        }
+        else {
+            const int c2 = expr->binary_op.lhs->value.constant;
+
+            // Move the constant value into A
+            fprintf( out_stream, "ldi B %d\n", c2 );
+        }
+
+        // call the operation
+        switch ( expr->binary_op.op ) {
+            case kBinaryAdd:
+                fprintf( out_stream, "add\n" );
+                break;
+            case kBinarySub:
+                fprintf( out_stream, "sub\n" );
+                break;
+            default:
+                LOG_WARN( "Unsupported Binary Op %s\n",
+                          ASTnodeBinaryTypeToString( expr->binary_op.op ) );
+        }
     }
     else {
         // c = v
         if ( node->assignment.rhs->type == kASTnodeIdentifier ) {
-            // c = a
-            const char* lhs_name = node->assignment.lhs;
+            // c = variable
             const char* rhs_name = node->assignment.rhs->value.name;
 
             assert( HTlookup( &scope->addr_table, rhs_name ) );
-            assert( HTlookup( &scope->addr_table, lhs_name ) );
-
-            uint8_t lhs_addr = HT_LOOKUP_INT( &scope->addr_table, rhs_name );
             uint8_t rhs_addr = HT_LOOKUP_INT( &scope->addr_table, rhs_name );
-            fprintf( out_stream,
-                     "; %s(%d) = %s(%d)\n",
-                     lhs_name,
-                     ctx->stack_pointer,
-                     rhs_name,
-                     rhs_addr );
-            fprintf( out_stream, "mov A M %d\n", rhs_addr );
-            fprintf( out_stream, "mov M A %d\n", lhs_addr );
-            ctx->stack_pointer--;
+
+            fprintf( out_stream, "mov A M %d; 'A = %s\n", rhs_addr, rhs_name );
         }
         else {
-            // c = 20
-            const char* id_name = node->assignment.lhs;
+            // c = constant
             const int constant = node->assignment.rhs->value.constant;
-
-            assert( HTlookup( &scope->addr_table, id_name ) );
-            uint8_t id_addr = HT_LOOKUP_INT( &scope->addr_table, id_name );
-
-            fprintf( out_stream,
-                     "; %s(%d) = %d\n",
-                     id_name,
-                     id_addr,
-                     node->assignment.rhs->value.constant );
             fprintf( out_stream, "ldi A %d\n", constant );
-            fprintf( out_stream, "mov M A %d\n", id_addr );
-            ctx->stack_pointer--;
         }
     }
+
+    // Update the LHS's value in RAM
+    fprintf( out_stream, "mov M A %d; M[%s] = 'A\n", lhs_addr, lhs_name );
 }
 
 void __codegen_if( codegen_context_t* ctx, FILE* out_stream, const ast_node_t* node )

@@ -59,9 +59,9 @@ typedef struct
 
 typedef struct
 {
-    ast_node_t* condition;
-    ast_node_t* if_block;
-    ast_node_t* else_block;
+    ast_node_t* condition;  // expr
+    ast_node_t* if_block;   // stmt_list
+    ast_node_t* else_block; // stmt_list
 } ASTifNode;
 
 struct ast_node_t
