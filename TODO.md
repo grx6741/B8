@@ -4,9 +4,11 @@
         - [x] Addition
         - [x] Subtraction
     - Comparision
-        - [ ] GT
+        - [x] GT
+        - [x] LT
         - [ ] GTE
-        - [ ] LT
         - [ ] LTE
+        - [ ] EQ
+        - [ ] NEQ
     - If
-        - [ ] Labels
+        - [x] Labels
