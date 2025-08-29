@@ -40,11 +40,11 @@ void ASTnodeLog( ast_node_t* node, int indent_level )
                 break;
             case kASTnodeIf:
                 LOG_INFO( "%*sIf:\n", indent_level * 4, "" );
-                ASTnodeLog( curr->if_block.condition, indent_level + 1 );
+                ASTnodeLog( curr->if_node.condition, indent_level + 1 );
                 LOG_INFO( "%*sThen:\n", indent_level * 4, "" );
-                ASTnodeLog( curr->if_block.if_block, indent_level + 1 );
+                ASTnodeLog( curr->if_node.if_block, indent_level + 1 );
                 LOG_INFO( "%*sElse:\n", indent_level * 4, "" );
-                ASTnodeLog( curr->if_block.else_block, indent_level + 1 );
+                ASTnodeLog( curr->if_node.else_block, indent_level + 1 );
                 LOG_INFO( "%*sEndif:\n", indent_level * 4, "" );
                 break;
         }

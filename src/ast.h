@@ -73,7 +73,7 @@ struct ast_node_t
         ASTassignmentNode assignment;
         ASTbinaryOpNode binary_op;
         ASTvalueNode value;
-        ASTifNode if_block;
+        ASTifNode if_node;
     };
     // Linked List of Nodes
     ast_node_t* next;

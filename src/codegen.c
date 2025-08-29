@@ -6,6 +6,20 @@
 #define LOG_PREFIX "CODE_GEN"
 #include "util.h"
 
+uint8_t __ctx_get_symbol_addr( codegen_context_t* ctx, const char* symbol_name) {
+	uint32_t i = ctx->scope_stack_top;
+
+	while (i >= 0) {
+		scope_t* scope = &ctx->scope_stack[i];
+		ht_element_t* val = HTlookup( &scope->addr_table, symbol_name );
+		if (val) return val->int_val;
+		i--;
+	}
+
+	assert(0 && "Symbol Not Declared");
+	return -1;
+}
+
 void __codegen_declaration( codegen_context_t* ctx, FILE* out_stream, const ast_node_t* node )
 {
     scope_t* scope = &ctx->scope_stack[ctx->scope_stack_top];
@@ -18,83 +32,105 @@ void __codegen_declaration( codegen_context_t* ctx, FILE* out_stream, const ast_
     HTinsertInt( &scope->addr_table, node->declaration.name, ctx->stack_pointer-- );
 }
 
-void __codegen_assignment( codegen_context_t* ctx, FILE* out_stream, const ast_node_t* node )
+// Evaluates the Expression and places the result in A
+// But if the Op is a comparison, it won't update A
+// it'll just update the flags
+// TODO : So var = a > b is not Supported Now
+void __codegen_expression( codegen_context_t* ctx, FILE* out_stream, const ast_node_t* node )
 {
     scope_t* scope = &ctx->scope_stack[ctx->scope_stack_top];
-    const char* lhs_name = node->assignment.lhs;
 
-    assert( HTlookup( &scope->addr_table, lhs_name ) );
-    uint8_t lhs_addr = HT_LOOKUP_INT( &scope->addr_table, lhs_name );
-
-    if ( node->assignment.rhs->type == kASTnodeBinaryOp ) {
+    if ( node->type == kASTnodeBinaryOp ) {
         // c = v1 op v2 || c1 op v2 || v1 op c2 || v1 + v2
         // where v{1,2} is a variable and c{1,2} is a constant
         // get c1,v1 and put it into A
 
-        ast_node_t* expr = node->assignment.rhs;
-        if ( expr->binary_op.lhs->type == kASTnodeIdentifier ) {
-            const char* v1_name = expr->binary_op.lhs->value.name;
+        if ( node->binary_op.lhs->type == kASTnodeIdentifier ) {
+            const char* v1_name = node->binary_op.lhs->value.name;
 
-            assert( HTlookup( &scope->addr_table, v1_name ) );
-            uint8_t v1_addr = HT_LOOKUP_INT( &scope->addr_table, v1_name );
+            // assert( HTlookup( &scope->addr_table, v1_name ) );
+            // uint8_t v1_addr = HT_LOOKUP_INT( &scope->addr_table, v1_name );
+			uint8_t v1_addr = __ctx_get_symbol_addr(ctx, v1_name);
 
             // Move value of first RHS var into A
             fprintf( out_stream, "mov A M %d; 'A = M[%s]\n", v1_addr, v1_name );
         }
         else {
-            const int c1 = expr->binary_op.lhs->value.constant;
+            const int c1 = node->binary_op.lhs->value.constant;
 
             // Move the constant value into A
             fprintf( out_stream, "ldi A %d\n", c1 );
         }
 
         // get c2,v2 and put it into B
-        if ( expr->binary_op.rhs->type == kASTnodeIdentifier ) {
-            const char* v2_name = expr->binary_op.rhs->value.name;
+        if ( node->binary_op.rhs->type == kASTnodeIdentifier ) {
+            const char* v2_name = node->binary_op.rhs->value.name;
 
-            assert( HTlookup( &scope->addr_table, v2_name ) );
-            uint8_t v2_addr = HT_LOOKUP_INT( &scope->addr_table, v2_name );
+            // assert( HTlookup( &scope->addr_table, v2_name ) );
+            // uint8_t v2_addr = HT_LOOKUP_INT( &scope->addr_table, v2_name );
+            uint8_t v2_addr = __ctx_get_symbol_addr( ctx, v2_name );
 
             // Move value of first RHS var into A
             fprintf( out_stream, "mov B M %d; 'B = M[%s]\n", v2_addr, v2_name );
         }
         else {
-            const int c2 = expr->binary_op.lhs->value.constant;
+            const int c2 = node->binary_op.rhs->value.constant;
 
             // Move the constant value into A
             fprintf( out_stream, "ldi B %d\n", c2 );
         }
 
         // call the operation
-        switch ( expr->binary_op.op ) {
+        switch ( node->binary_op.op ) {
             case kBinaryAdd:
                 fprintf( out_stream, "add\n" );
                 break;
             case kBinarySub:
                 fprintf( out_stream, "sub\n" );
                 break;
+			case kBinaryLT:
+			case kBinaryLE:
+			case kBinaryGT:
+			case kBinaryGE:
+			case kBinaryNE:
+			case kBinaryEQ:
+                fprintf( out_stream, "cmp\n" );
+				break;
             default:
                 LOG_WARN( "Unsupported Binary Op %s\n",
-                          ASTnodeBinaryTypeToString( expr->binary_op.op ) );
+                          ASTnodeBinaryTypeToString( node->binary_op.op ) );
         }
     }
     else {
         // c = v
-        if ( node->assignment.rhs->type == kASTnodeIdentifier ) {
+        if ( node->type == kASTnodeIdentifier ) {
             // c = variable
-            const char* rhs_name = node->assignment.rhs->value.name;
+            const char* rhs_name = node->value.name;
 
-            assert( HTlookup( &scope->addr_table, rhs_name ) );
-            uint8_t rhs_addr = HT_LOOKUP_INT( &scope->addr_table, rhs_name );
+            // assert( HTlookup( &scope->addr_table, rhs_name ) );
+            // uint8_t rhs_addr = HT_LOOKUP_INT( &scope->addr_table, rhs_name );
+            uint8_t rhs_addr = __ctx_get_symbol_addr(ctx, rhs_name);
 
             fprintf( out_stream, "mov A M %d; 'A = %s\n", rhs_addr, rhs_name );
         }
         else {
             // c = constant
-            const int constant = node->assignment.rhs->value.constant;
+            const int constant = node->value.constant;
             fprintf( out_stream, "ldi A %d\n", constant );
         }
     }
+}
+ 
+void __codegen_assignment( codegen_context_t* ctx, FILE* out_stream, const ast_node_t* node )
+{
+    scope_t* scope = &ctx->scope_stack[ctx->scope_stack_top];
+    const char* lhs_name = node->assignment.lhs;
+
+    // assert( HTlookup( &scope->addr_table, lhs_name ) );
+    // uint8_t lhs_addr = HT_LOOKUP_INT( &scope->addr_table, lhs_name );
+    uint8_t lhs_addr = __ctx_get_symbol_addr( ctx, lhs_name );
+
+	__codegen_expression(ctx, out_stream, node->assignment.rhs);
 
     // Update the LHS's value in RAM
     fprintf( out_stream, "mov M A %d; M[%s] = 'A\n", lhs_addr, lhs_name );
@@ -102,7 +138,76 @@ void __codegen_assignment( codegen_context_t* ctx, FILE* out_stream, const ast_n
 
 void __codegen_if( codegen_context_t* ctx, FILE* out_stream, const ast_node_t* node )
 {
-    fprintf( out_stream, "NOT IMPLEMENTED: __codegen_if* \n" );
+	// asm for condition
+	ast_node_t* condition = node->if_node.condition;
+	__codegen_expression(ctx, out_stream, condition);
+	// the condition expression could've been if (1) or if (1 > 3)
+
+	// if not condition, jump to else block
+	switch (condition->binary_op.op) {
+		case kBinaryAdd: 
+		case kBinarySub: 
+			break;
+		case kBinaryLT: 
+            fprintf( out_stream, "jnc %%else%d\n", 0);
+			break;
+		case kBinaryLE: 
+			break;
+		case kBinaryGT: 
+            fprintf( out_stream, "jc %%else%d\n", 0);
+			break;
+		case kBinaryGE: 
+			break;
+		case kBinaryNE: 
+			break;
+		case kBinaryEQ: 
+			break;
+		default:
+			LOG_WARN("Unsupported Binary Op %s\n", ASTnodeBinaryTypeToString(condition->binary_op.op));
+	}
+
+	/*
+	 * mov A M[a]
+	 * mov B M[b]
+	 * cmp
+	 * jnc else
+	 * <if>
+	 * else:
+	 * <else>
+	 *
+	 * if ( a < b ) {
+	 *	   if block
+	 * } else {
+	 *	   else block
+	 * }
+	 *
+	 * mov A M[a]
+	 * mov B M[b]
+	 * cmp
+	 * jc else
+	 * <if>
+	 * else:
+	 * <else>
+	 *
+	 * if ( a > b ) {
+	 *	   if block
+	 * } else {
+	 *	   else block
+	 * }
+	 * */
+
+	uint32_t if_block_num = ctx->if_block_counter++;
+	
+	// asm for if block
+	ctx->scope_stack_top++;
+	Codegen(ctx, out_stream, node->if_node.if_block);
+	fprintf(out_stream, "jmp %%endif%d\n", if_block_num);
+
+	// asm for else block
+	ctx->scope_stack_top++;
+	fprintf(out_stream, "else%d:\n", if_block_num);
+	Codegen(ctx, out_stream, node->if_node.else_block);
+	fprintf(out_stream, "endif%d:\n", if_block_num);
 }
 
 void Codegen( codegen_context_t* ctx, FILE* out_stream, const ast_node_t* AST )

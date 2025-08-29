@@ -1,2 +1,4 @@
 bin/
 b8
+venv
+.ignore

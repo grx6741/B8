@@ -4,12 +4,9 @@ int b;
 int c; 
 
 // Assignment 
-a = 10; 
-b = 20; 
-c = a;
-a = c;
-c = a + b; 
-a = c - b;
+a = 1; 
+b = 3; 
+c = 5;
 
 // Conditional 
 if (c > 20) {

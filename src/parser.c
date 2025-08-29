@@ -194,9 +194,9 @@ ast_node_t* ParseIf( parser_t* P )
     ast_node_t* else_block = ParseBlock( P );
 
     ast_node_t* if_node = ASTnode( kASTnodeIf );
-    if_node->if_block.condition = condition;
-    if_node->if_block.if_block = if_block;
-    if_node->if_block.else_block = else_block;
+    if_node->if_node.condition = condition;
+    if_node->if_node.if_block = if_block;
+    if_node->if_node.else_block = else_block;
 
     return if_node;
 }

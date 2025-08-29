@@ -24,6 +24,8 @@ typedef struct
     uint32_t scope_stack_top;
 
     uint8_t stack_pointer;
+
+	uint32_t if_block_counter;
 } codegen_context_t;
 
 void Codegen( codegen_context_t* ctx, FILE* out_stream, const ast_node_t* AST );
