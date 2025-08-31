@@ -33,6 +33,7 @@ loop {
 1. Declare variables in the Current Scope
 
 ```cpp
+// This is a comment
 int a;
 int b;
 ```
@@ -94,9 +95,17 @@ int a;
 ```
 
 3. A B8 program can only have a max scope depth of 255 (`MAX_SCOPE_DEPTH`).
-4. No support for user defined functions. A program can only call `out()` function with only one arguement.
-5. No Optimized Register Allocation is done. Each access to a variable is done by reading from the RAM.
-6. Only Binary Expressions are supported. So this is invalid.
+4. Every If section MUST have an else secion. But the else can be empty. No support for else if statements.
+
+```cpp
+if ( a <= 16 ) {
+    // Do something
+} else {}
+```
+
+5. No support for user defined functions. A program can only call `out()` function with only one arguement.
+6. No Optimized Register Allocation is done. Each access to a variable is done by reading from the RAM.
+7. Only Binary Expressions are supported. So this is invalid.
 
 ```cpp
 int a;
