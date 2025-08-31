@@ -36,13 +36,11 @@ int a;
 int b;
 ```
 
-2. Assign Values to declared variables in current stack or the previous stacks
+2. Assign Values to declared variables in current stack or the previous stacks. Only supports positive 8 bit integers `uint8_t`
 
 ```cpp
 a = 20;
 ```
-
-Only supports positive 8 bit integers `uint8_t`
 
 3. Only Binary Operations
 
