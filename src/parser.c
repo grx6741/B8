@@ -7,7 +7,22 @@
 #include "assert.h"
 #include "string.h"
 
-#define CONSUME( P, type ) consume( P, type, __func__ )
+#define CONSUME( P, type ) __consume( P, type, __func__ )
+
+token_t __peek(parser_t* P);
+token_t __consume(parser_t* P, TokenType type, const char* caller);
+
+ast_node_t* __parse_stmt_list(parser_t* P);
+ast_node_t* __parse_stmt(parser_t* P);
+ast_node_t* __parse_block(parser_t* P);
+ast_node_t* __parse_decl(parser_t* P);
+ast_node_t* __parse_assign(parser_t* P);
+ast_node_t* __parse_expr(parser_t* P);
+ast_node_t* __parse_expr_(parser_t* P, ast_node_t* lhs);
+ast_node_t* __parse_value(parser_t* P);
+ast_node_t* __parse_if(parser_t* P);
+ast_node_t* __parse_loop(parser_t* P);
+ast_node_t* __parse_break(parser_t* P);
 
 parser_t Parser( lexer_t* lexer )
 {
@@ -22,25 +37,25 @@ parser_t Parser( lexer_t* lexer )
 ast_node_t* ParseProgram( parser_t* P )
 {
     LOG_INFO( "Parsing Program\n" );
-    return ParseStmtList( P );
+    return __parse_stmt_list( P );
 }
 
 // stmt_list	:= stmt*
-// stmt		:= decl | assign | if | block
-ast_node_t* ParseStmtList( parser_t* P )
+// stmt := decl | assign | if | block |  func_call | loop | break
+ast_node_t* __parse_stmt_list( parser_t* P )
 {
     LOG_INFO( "Parsing StmtList\n" );
     ast_node_t* node = NULL;
     ast_node_t* next = NULL;
 
-    while ( peek( P ).type == kTokenInt			|| // Declaration
-            peek( P ).type == kTokenIdentifier	|| // Assignment
-            peek( P ).type == kTokenLoop		|| // Loop
-            peek( P ).type == kTokenBreak		|| // Break
-            peek( P ).type == kTokenIf			|| // If
-            peek( P ).type == kTokenOpenBrace      // Block
+    while ( __peek( P ).type == kTokenInt			|| // Declaration
+            __peek( P ).type == kTokenIdentifier	|| // Assignment
+            __peek( P ).type == kTokenLoop		|| // Loop
+            __peek( P ).type == kTokenBreak		|| // Break
+            __peek( P ).type == kTokenIf			|| // If
+            __peek( P ).type == kTokenOpenBrace      // Block
     ) {
-        ast_node_t* stmt = ParseStmt( P );
+        ast_node_t* stmt = __parse_stmt( P );
         if ( !node ) {
             node = stmt;
             next = stmt;
@@ -55,26 +70,26 @@ ast_node_t* ParseStmtList( parser_t* P )
 }
 
 // stmt		:= decl | assign | if | block
-ast_node_t* ParseStmt( parser_t* P )
+ast_node_t* __parse_stmt( parser_t* P )
 {
     LOG_INFO( "Parsing Stmt\n" );
-    if ( peek( P ).type == kTokenInt )
-        return ParseDecl( P );
+    if ( __peek( P ).type == kTokenInt )
+        return __parse_decl( P );
 
-    if ( peek( P ).type == kTokenIdentifier )
-        return ParseAssign( P );
+    if ( __peek( P ).type == kTokenIdentifier )
+        return __parse_assign( P );
 
-    if ( peek( P ).type == kTokenIf )
-        return ParseIf( P );
+    if ( __peek( P ).type == kTokenIf )
+        return __parse_if( P );
 
-    if ( peek( P ).type == kTokenOpenBrace )
-        return ParseBlock( P );
+    if ( __peek( P ).type == kTokenOpenBrace )
+        return __parse_block( P );
 
-    if ( peek( P ).type == kTokenLoop )
-        return ParseLoop( P );
+    if ( __peek( P ).type == kTokenLoop )
+        return __parse_loop( P );
 
-    if ( peek( P ).type == kTokenBreak )
-        return ParseBreak( P );
+    if ( __peek( P ).type == kTokenBreak )
+        return __parse_break( P );
 
     LOG_ERROR( "Invalid Statement."
                "Expected \"int\", \"variable\", \"if\", \"{\"\n" );
@@ -82,18 +97,18 @@ ast_node_t* ParseStmt( parser_t* P )
     return NULL;
 }
 
-ast_node_t* ParseLoop(parser_t* P)
+ast_node_t* __parse_loop(parser_t* P)
 {
     LOG_INFO( "Parsing Loop\n" );
 	CONSUME(P, kTokenLoop);
 
 	ast_node_t* loop = ASTnode(kASTnodeLoop);
-	loop->loop.block = ParseBlock(P);
+	loop->loop.block = __parse_block(P);
 
 	return loop;
 }
 
-ast_node_t* ParseBreak(parser_t* P)
+ast_node_t* __parse_break(parser_t* P)
 {
     LOG_INFO( "Parsing Break\n" );
 	CONSUME(P, kTokenBreak);
@@ -103,7 +118,7 @@ ast_node_t* ParseBreak(parser_t* P)
 }
 
 // decl	    := 'int' identifier ';'
-ast_node_t* ParseDecl( parser_t* P )
+ast_node_t* __parse_decl( parser_t* P )
 {
     LOG_INFO( "Parsing Decl\n" );
     CONSUME( P, kTokenInt );
@@ -138,7 +153,7 @@ ast_node_t* ParseFuncCall( parser_t* P, token_t func_name_token )
 }
 
 // assign := identifier '=' expr ';'
-ast_node_t* ParseAssign( parser_t* P )
+ast_node_t* __parse_assign( parser_t* P )
 {
     LOG_INFO( "Parsing Assigment\n" );
     ast_node_t* node = ASTnode( kASTnodeAssign );
@@ -146,7 +161,7 @@ ast_node_t* ParseAssign( parser_t* P )
     token_t iden = CONSUME( P, kTokenIdentifier );
 
 	// func_call   := identifier '(' identifier ')' ';'
-	if ( peek( P ).type == kTokenOpenParen ) {
+	if ( __peek( P ).type == kTokenOpenParen ) {
 		return ParseFuncCall( P, iden );
 	}
 
@@ -154,7 +169,7 @@ ast_node_t* ParseAssign( parser_t* P )
 
     CONSUME( P, kTokenAssign );
 
-    node->assignment.rhs = ParseExpr( P );
+    node->assignment.rhs = __parse_expr( P );
 
     CONSUME( P, kTokenSemiColon );
 
@@ -162,15 +177,15 @@ ast_node_t* ParseAssign( parser_t* P )
 }
 
 // expr := value expr_
-ast_node_t* ParseExpr( parser_t* P )
+ast_node_t* __parse_expr( parser_t* P )
 {
     LOG_INFO( "Parsing Expr\n" );
-    ast_node_t* lhs = ParseValue( P );
-    return ParseExpr_( P, lhs );
+    ast_node_t* lhs = __parse_value( P );
+    return __parse_expr_( P, lhs );
 }
 
 // expr_ := (op value) | <empty>
-ast_node_t* ParseExpr_( parser_t* P, ast_node_t* lhs )
+ast_node_t* __parse_expr_( parser_t* P, ast_node_t* lhs )
 {
     LOG_INFO( "Parsing Expr_\n" );
     ast_node_t* node = ASTnode( kASTnodeBinaryOp );
@@ -188,7 +203,7 @@ ast_node_t* ParseExpr_( parser_t* P, ast_node_t* lhs )
     node->binary_op.lhs = lhs;
     bool valid_op = false;
     for ( int i = 0; i < kBinaryTypeCount; i++ ) {
-        if ( peek( P ).type == token_to_op_table[i] ) {
+        if ( __peek( P ).type == token_to_op_table[i] ) {
             node->binary_op.op = i;
             CONSUME( P, token_to_op_table[i] );
             valid_op = true;
@@ -199,15 +214,15 @@ ast_node_t* ParseExpr_( parser_t* P, ast_node_t* lhs )
         return lhs;
     }
 
-    node->binary_op.rhs = ParseValue( P );
+    node->binary_op.rhs = __parse_value( P );
     return node;
 }
 
 // value := identifier | constant
-ast_node_t* ParseValue( parser_t* P )
+ast_node_t* __parse_value( parser_t* P )
 {
     LOG_INFO( "Parsing Value\n" );
-    if ( peek( P ).type == kTokenIdentifier ) {
+    if ( __peek( P ).type == kTokenIdentifier ) {
         token_t iden = CONSUME( P, kTokenIdentifier );
         ast_node_t* node = ASTnode( kASTnodeIdentifier );
 
@@ -216,7 +231,7 @@ ast_node_t* ParseValue( parser_t* P )
         return node;
     }
 
-    if ( peek( P ).type == kTokenNumber ) {
+    if ( __peek( P ).type == kTokenNumber ) {
         token_t number = CONSUME( P, kTokenNumber );
         ast_node_t* node = ASTnode( kASTnodeConstant );
 
@@ -229,7 +244,7 @@ ast_node_t* ParseValue( parser_t* P )
     return NULL;
 }
 
-ast_node_t* ParseIf( parser_t* P )
+ast_node_t* __parse_if( parser_t* P )
 {
     LOG_INFO( "Parsing If\n" );
 
@@ -237,16 +252,16 @@ ast_node_t* ParseIf( parser_t* P )
 
     CONSUME( P, kTokenOpenParen );
 
-    ast_node_t* condition = ParseExpr( P );
+    ast_node_t* condition = __parse_expr( P );
 
     CONSUME( P, kTokenCloseParen );
 
-    ast_node_t* if_block = ParseBlock( P );
+    ast_node_t* if_block = __parse_block( P );
 
     CONSUME( P, kTokenElse );
     LOG_INFO( "Parsing Else\n" );
 
-    ast_node_t* else_block = ParseBlock( P );
+    ast_node_t* else_block = __parse_block( P );
 
     ast_node_t* if_node = ASTnode( kASTnodeIf );
     if_node->if_node.condition = condition;
@@ -256,30 +271,28 @@ ast_node_t* ParseIf( parser_t* P )
     return if_node;
 }
 
-ast_node_t* ParseBlock( parser_t* P )
+ast_node_t* __parse_block( parser_t* P )
 {
     LOG_INFO( "Parsing Block\n" );
 
     CONSUME( P, kTokenOpenBrace );
 
-    ast_node_t* stmt_list = ParseStmtList( P );
+    ast_node_t* stmt_list = __parse_stmt_list( P );
 
     CONSUME( P, kTokenCloseBrace );
 
     return stmt_list;
 }
 
-// Private
-
-token_t peek( parser_t* P )
+token_t __peek( parser_t* P )
 {
     return P->curr;
 }
 
-token_t consume( parser_t* P, TokenType type, const char* caller )
+token_t __consume( parser_t* P, TokenType type, const char* caller )
 {
     assert( P->L );
-    if ( peek( P ).type != type ) {
+    if ( __peek( P ).type != type ) {
         LOG_ERROR( "[%s] Expected Token Type %s, but got %s at %d,%d\n",
                    caller,
                    TokenTypeToStr( type ),
@@ -293,7 +306,7 @@ token_t consume( parser_t* P, TokenType type, const char* caller )
 			   );
     }
 
-    token_t token = peek( P );
+    token_t token = __peek( P );
     P->curr = LexerNextToken( P->L );
 
     LOG_INFO( "Consumed %s\n", TokenTypeToStr( type ) );

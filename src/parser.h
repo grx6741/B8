@@ -8,22 +8,8 @@ typedef struct {
     token_t curr;
 } parser_t;
 
-// Public
+// Constructor for parser_t
 parser_t Parser(lexer_t* lexer);
+
+// Parses with the grammar :: (program := stmt_list)
 ast_node_t* ParseProgram(parser_t* P);
-ast_node_t* ParseStmtList(parser_t* P);
-ast_node_t* ParseStmt(parser_t* P);
-ast_node_t* ParseBlock(parser_t* P);
-
-ast_node_t* ParseDecl(parser_t* P);
-ast_node_t* ParseAssign(parser_t* P);
-ast_node_t* ParseExpr(parser_t* P);
-ast_node_t* ParseExpr_(parser_t* P, ast_node_t* lhs);
-ast_node_t* ParseValue(parser_t* P);
-ast_node_t* ParseIf(parser_t* P);
-ast_node_t* ParseLoop(parser_t* P);
-ast_node_t* ParseBreak(parser_t* P);
-
-// Private
-token_t peek(parser_t* P);
-token_t consume(parser_t* P, TokenType type, const char* caller);

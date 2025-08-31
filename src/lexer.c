@@ -4,7 +4,9 @@
 #include "string.h"
 #include "stdlib.h"
 
-// Public
+void __skip_white_space(lexer_t* L);
+char __get_char(lexer_t* L);
+void __unget_char(lexer_t* L, char c);
 
 lexer_t Lexer( FILE* fd, const char* file_name )
 {
@@ -23,23 +25,23 @@ bool LexerHasMoreTokens( const lexer_t* L )
 
 token_t LexerNextToken( lexer_t* L )
 {
-	skipWhitespace( L );
+	__skip_white_space( L );
 
-	char c = getChar( L );
+	char c = __get_char( L );
 
 	if ( c == '/' ) {
 		// Can be comment
-		char next = getChar( L );
+		char next = __get_char( L );
 		if ( next == '/' ) {
 			// Skip entire line, cuz this is a comment
-			while ( getChar( L ) != '\n' )
+			while ( __get_char( L ) != '\n' )
 				;
 			L->row += 1;
 			L->col = 1;
 
 			return LexerNextToken( L );
 		}
-		ungetChar( L, next );
+		__unget_char( L, next );
 		// Can be a Division Operator. Not supported for now
 	}
 	else if ( isalpha( c ) ) {
@@ -50,10 +52,10 @@ token_t LexerNextToken( lexer_t* L )
 			// TODO : Will Cause Buffer overflow if the identifier
 			// name is more than 'MAX_IDENTIFIER_NAME_LEN'
 			id_name[id_name_len++] = c;
-			c = getChar( L );
+			c = __get_char( L );
 		}
 		id_name[id_name_len] = '\0';
-		ungetChar( L, c );
+		__unget_char( L, c );
 
 		if ( strcmp( id_name, "if" ) == 0 )
 			return NEW_TOKEN( kTokenIf, .row = L->row, .col = start_col );
@@ -79,40 +81,40 @@ token_t LexerNextToken( lexer_t* L )
 			// TODO : Will Cause Buffer overflow if the identifier
 			// name is more than 'MAX_IDENTIFIER_NAME_LEN'
 			number[number_len++] = c;
-			c = getChar( L );
+			c = __get_char( L );
 		}
 		number[number_len] = '\0';
-		ungetChar( L, c );
+		__unget_char( L, c );
 
 		// TODO : Better Error Handling
 		return NEW_TOKEN( kTokenNumber, .value = strtol( number, NULL, 10 ), .row = L->row, .col = start_col );
 	}
 	else if ( c == '=' ) {
-		char next = getChar( L );
+		char next = __get_char( L );
 		if ( next == '=' )
 			return NEW_TOKEN( kTokenCompareEquals, .row = L->row, .col = L->col - 2 );
-		ungetChar( L, next );
+		__unget_char( L, next );
 		return NEW_TOKEN( kTokenAssign, .row = L->row, .col = L->col - 1 );
 	}
 	else if ( c == '>' ) {
-		char next = getChar( L );
+		char next = __get_char( L );
 		if ( next == '=' )
 			return NEW_TOKEN( kTokenCompareGreaterThanEquals, .row = L->row, .col = L->col - 2 );
-		ungetChar( L, next );
+		__unget_char( L, next );
 		return NEW_TOKEN( kTokenCompareGreaterThan, .row = L->row, .col = L->col - 1 );
 	}
 	else if ( c == '<' ) {
-		char next = getChar( L );
+		char next = __get_char( L );
 		if ( next == '=' )
 			return NEW_TOKEN( kTokenCompareLessThanEquals, .row = L->row, .col = L->col - 2 );
-		ungetChar( L, next );
+		__unget_char( L, next );
 		return NEW_TOKEN( kTokenCompareLessThan, .row = L->row, .col = L->col - 1 );
 	}
 	else if ( c == '!' ) {
-		char next = getChar( L );
+		char next = __get_char( L );
 		if ( next == '=' )
 			return NEW_TOKEN( kTokenCompareNotEquals, .row = L->row, .col = L->col - 2 );
-		ungetChar( L, next );
+		__unget_char( L, next );
 		// TODO : When '!' unary support is to be added, add it here
 		return NEW_TOKEN( kTokenInvalid, .row = L->row, .col = L->col - 1 );
 	}
@@ -136,29 +138,27 @@ token_t LexerNextToken( lexer_t* L )
 	return NEW_TOKEN( kTokenInvalid, .row = L->row, .col = L->col, .name = { c } );
 }
 
-// Private
-
-void skipWhitespace( lexer_t* L )
+void __skip_white_space( lexer_t* L )
 {
-	char c = getChar( L );
+	char c = __get_char( L );
 	while ( c != EOF && isspace( c ) ) {
 		if ( c == '\n' ) {
 			L->row += 1;
 			L->col = 1;
 		}
-		c = getChar( L );
+		c = __get_char( L );
 	}
-	ungetChar( L, c );
+	__unget_char( L, c );
 }
 
-char getChar( lexer_t* L )
+char __get_char( lexer_t* L )
 {
 	char c = fgetc( L->fd );
 	L->col += 1;
 	return c;
 }
 
-void ungetChar( lexer_t* L, char c )
+void __unget_char( lexer_t* L, char c )
 {
 	ungetc( c, L->fd );
 	L->col -= 1;

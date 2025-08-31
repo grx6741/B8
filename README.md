@@ -142,3 +142,13 @@ echo "int a; a = 10; out(a);" > custom_input.b8
 ./8bit-computer/asm/asm.py output.asm > 8bit-computer/memory.list
 make run -C 8bit-computer
 ```
+
+Tests for B8 only runs on linux, because its uses posix specific functions internally, so its not cross platform. To run the tests for the compiler, simply run
+
+```
+make test
+```
+
+## Architecture
+
+![](./arch.png)
