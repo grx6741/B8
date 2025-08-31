@@ -1,7 +1,7 @@
 # B8
 
 B8 is a very minimal Programming language for this ![8 bit Computer](https://github.com/lightcode/8bit-computer).
-To Build this Compiler see the ![BUILDING](##BUILDING) section
+To Build this Compiler see the ![BUILDING](##Building) section
 
 ## Example
 
