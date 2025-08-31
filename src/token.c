@@ -13,48 +13,53 @@ const char* TokenTypeToStr( TokenType type )
 {
     switch ( type ) {
         case kTokenElse:
-            return "kTokenElse";
+            return "else";
         case kTokenCompareNotEquals:
-            return "kTokenCompareNotEquals";
+            return "!=";
         case kTokenCompareLessThan:
-            return "kTokenCompareLessThan";
+            return "<";
         case kTokenCompareLessThanEquals:
-            return "kTokenCompareLessThanEquals";
+            return "<=";
         case kTokenCompareGreaterThan:
-            return "kTokenCompareGreaterThan";
+            return ">";
         case kTokenCompareGreaterThanEquals:
-            return "kTokenCompareGreaterThanEquals";
+            return ">=";
         case kTokenInt:
-            return "kTokenInt";
+            return "int";
         case kTokenIf:
-            return "kTokenIf";
+            return "if";
         case kTokenIdentifier:
-            return "kTokenIdentifier";
+            return "identifier";
         case kTokenNumber:
-            return "kTokenNumber";
+            return "number";
         case kTokenAssign:
-            return "kTokenAssign";
+            return "=";
         case kTokenPlus:
-            return "kTokenPlus";
+            return "+";
         case kTokenMinus:
-            return "kTokenMinus";
+            return "-";
         case kTokenCompareEquals:
-            return "kTokenCompareEquals";
+            return "==";
         case kTokenOpenParen:
-            return "kTokenOpenParen";
+            return "(";
         case kTokenCloseParen:
-            return "kTokenCloseParen";
+            return ")";
         case kTokenOpenBrace:
-            return "kTokenOpenBrace";
+            return "{";
         case kTokenCloseBrace:
-            return "kTokenCloseBrace";
+            return "}";
         case kTokenSemiColon:
-            return "kTokenSemiColon";
+            return ";";
+        case kTokenLoop:
+            return "loop";
+        case kTokenBreak:
+            return "break";
         case kTokenEOF:
-            return "kTokenEOF";
+            return "EOF";
         case kTokenCount:
-            return "kTokenCount";
+		default:
+            return "invalid";
     }
 
-    return NULL;
+    return "invalid";
 }

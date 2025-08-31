@@ -3,6 +3,7 @@
 #include <stdarg.h>
 #include <assert.h>
 #include <string.h>
+#include <stdlib.h>
 
 #define LOG_ENABLED 1
 #define LOG_PREFIX "CODE_GEN"
@@ -20,10 +21,27 @@ uint8_t __ctx_get_symbol_addr( codegen_context_t* ctx, const char* symbol_name) 
 		i--;
 	}
 
-	assert(0 && "Symbol Not Declared");
+	fprintf(stderr, "Use of Undeclared Symbol \"%s\"\n", symbol_name);
+	exit(EXIT_FAILURE);
+
 	return -1;
 }
 
+void __codegen_loop( codegen_context_t* ctx, FILE* out_stream, const ast_node_t* node )
+{
+	ctx->scope_stack_top++;
+	fprintf(out_stream, "__loop%d:\n", ctx->loop_block_counter);
+	__codegen(ctx, out_stream, node->loop.block);
+	fprintf(out_stream, "jmp %%__loop%d\n", ctx->loop_block_counter);
+	fprintf(out_stream, "__endloop%d:\n", ctx->loop_block_counter);
+
+	ctx->loop_block_counter++;
+}
+
+void __codegen_break( codegen_context_t* ctx, FILE* out_stream, const ast_node_t* node )
+{
+	fprintf(out_stream, "jmp %%__endloop%d\n", ctx->loop_block_counter);
+}
 
 void __codegen_func_call(codegen_context_t* ctx, FILE* out_stream, const ast_node_t* curr)
 {
@@ -221,34 +239,41 @@ void __codegen( codegen_context_t* ctx, FILE* out_stream, const ast_node_t* AST 
     // save the stack pointer for this scope
     scope->frame_pointer = ctx->stack_pointer;
 
-    const ast_node_t* curr = AST;
-    while ( curr ) {
-        switch ( curr->type ) {
-            case kASTnodeDeclare:
-                __codegen_declaration( ctx, out_stream, curr );
-                break;
-            case kASTnodeAssign:
-                __codegen_assignment( ctx, out_stream, curr );
-                break;
-            case kASTnodeIf:
-                __codegen_if( ctx, out_stream, curr );
-                break;
-			case kASTnodeFuncCall:
-				__codegen_func_call(ctx, out_stream, curr);
-            // the rest shouldn't be out in the
-            // open, so i dont explicitly handle
-            // them for now
-            case kASTnodeBinaryOp:
-                break;
-            case kASTnodeIdentifier:
-                break;
-            case kASTnodeConstant:
-                break;
-        }
-        curr = curr->next;
-    }
-
-    HTlog( &scope->addr_table );
+	const ast_node_t* curr = AST;
+	if (curr) {
+		while ( curr ) {
+			switch ( curr->type ) {
+				case kASTnodeDeclare:
+					__codegen_declaration( ctx, out_stream, curr );
+					break;
+				case kASTnodeAssign:
+					__codegen_assignment( ctx, out_stream, curr );
+					break;
+				case kASTnodeIf:
+					__codegen_if( ctx, out_stream, curr );
+					break;
+				case kASTnodeBreak:
+					__codegen_break(ctx, out_stream, curr);
+					break;
+				case kASTnodeFuncCall:
+					__codegen_func_call(ctx, out_stream, curr);
+					break;
+				case kASTnodeLoop:
+					__codegen_loop(ctx, out_stream, curr);
+					break;
+					// the rest shouldn't be out in the
+					// open, so i dont explicitly handle
+					// them for now
+				case kASTnodeBinaryOp:
+					break;
+				case kASTnodeIdentifier:
+					break;
+				case kASTnodeConstant:
+					break;
+			}
+			curr = curr->next;
+		}
+	}
 
     HTdelete( &scope->addr_table );
     // Restore the stack pointer

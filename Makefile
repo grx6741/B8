@@ -8,13 +8,21 @@ SRC = src/lexer.c \
 OBJ = $(SRC:src/%.c=bin/%.o)
 TARGET = b8
 
+OUT = output.asm
+IN = input.b8
+
 CFLAGS   = -ggdb
 LD_FLAGS = -lm
 
-run: $(TARGET)
-	./$(TARGET) input.b8 output.asm
-	cp output.asm 8bit-computer
-	./8bit-computer/asm/asm.py 8bit-computer/output.asm > 8bit-computer/memory.list
+$(OUT): $(TARGET)
+	./$(TARGET) $(IN) $(OUT)
+
+$(TARGET): $(OBJ) src/main.c
+	gcc -c -o bin/main.o src/main.c
+	gcc -o $@ $(OBJ) bin/main.o $(CFLAGS) $(LD_FLAGS)
+
+run: $(OUT)
+	./8bit-computer/asm/asm.py $(OUT) > 8bit-computer/memory.list
 	make run -C 8bit-computer
 
 test: $(OBJ) src/test.c
@@ -24,10 +32,6 @@ test: $(OBJ) src/test.c
 
 all: clean run
 
-$(TARGET): $(OBJ) src/main.c
-	gcc -c -o bin/main.o src/main.c
-	gcc -o $@ $(OBJ) bin/main.o $(CFLAGS) $(LD_FLAGS)
-
 bin/%.o: src/%.c | bin
 	gcc -c -o $@ $< $(CFLAGS)
 
@@ -36,4 +40,4 @@ bin:
 
 clean:
 	rm -rf $(OBJ) $(TARGET)
-	rm 8bit-computer/output.asm 8bit-computer/memory.list
+	rm -f $(OUT) 8bit-computer/memory.list

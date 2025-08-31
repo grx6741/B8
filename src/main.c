@@ -45,16 +45,16 @@ int main(int argc, char* argv[])
 
     FILE* f = fopen( input_file, "r" );
 
-    lexer_t L = Lexer( f );
+    lexer_t L = Lexer( f, input_file );
 
     parser_t P = Parser( &L );
     ast_node_t* AST = ParseProgram( &P );
 
     FILE* out_file = fopen( output_file , "w" );
-    ASTnodeLog( AST, 0 );
 
     Codegen( out_file , AST );
 
+	ASTfree(AST);
     fclose( out_file );
     fclose( f );
 

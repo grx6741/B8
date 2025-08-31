@@ -26,9 +26,13 @@ typedef enum
     kTokenOpenBrace,
     kTokenCloseBrace,
     kTokenSemiColon,
+	kTokenLoop,
+	kTokenBreak,
     kTokenEOF,
     kTokenCount
 } TokenType;
+
+const char* TokenTypeToStr( TokenType type );
 
 typedef struct
 {
@@ -49,4 +53,3 @@ typedef struct
     }
 
 void LogToken( token_t token );
-const char* TokenTypeToStr( TokenType type );

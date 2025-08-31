@@ -1,7 +1,7 @@
 #include "ast.h"
 #include "stdlib.h"
 
-#define LOG_ENABLED 0
+#define LOG_ENABLED 1
 #define LOG_PREFIX "AST"
 #include "util.h"
 
@@ -10,6 +10,35 @@ ast_node_t* ASTnode( ASTnodeType type )
     ast_node_t* node = ( ast_node_t* ) malloc( sizeof( ast_node_t ) );
     node->type = type;
     return node;
+}
+
+void ASTfree( ast_node_t* root )
+{
+	switch ( root->type ) {
+		case kASTnodeDeclare: break;
+		case kASTnodeIdentifier: break;
+		case kASTnodeConstant: break;
+		case kASTnodeBreak: break;
+		case kASTnodeAssign: 
+			ASTfree(root->assignment.rhs);
+			break;
+		case kASTnodeBinaryOp: 
+			ASTfree(root->binary_op.lhs);
+			ASTfree(root->binary_op.rhs);
+			break;
+		case kASTnodeIf:
+			ASTfree(root->if_node.condition);
+			ASTfree(root->if_node.if_block);
+			ASTfree(root->if_node.else_block);
+			break;
+		case kASTnodeLoop: 
+			ASTfree(root->loop.block);
+			break;
+		case kASTnodeFuncCall: 
+			ASTfree(root->func_call.arg);
+			break;
+	}
+	free(root);
 }
 
 void ASTnodeLog( ast_node_t* node, int indent_level )
@@ -47,6 +76,16 @@ void ASTnodeLog( ast_node_t* node, int indent_level )
                 ASTnodeLog( curr->if_node.else_block, indent_level + 1 );
                 LOG_INFO( "%*sEndif:\n", indent_level * 4, "" );
                 break;
+			case kASTnodeFuncCall:
+                LOG_INFO( "%*scall %s :: (%s)\n", indent_level * 4, "", curr->func_call.name, curr->func_call.arg->value.name);
+				break;
+			case kASTnodeLoop:
+                LOG_INFO( "%*sloop\n", indent_level * 4, "" );
+                ASTnodeLog( curr->loop.block, indent_level + 1 );
+				break;
+			case kASTnodeBreak:
+                LOG_INFO( "%*sbreak\n", indent_level * 4, "" );
+				break;
         }
 
         curr = curr->next;
@@ -94,6 +133,12 @@ const char* ASTnodeTypeToString( ASTnodeType type )
             return "kASTnodeConstant";
         case kASTnodeIf:
             return "kASTnodeIf";
+		case kASTnodeLoop: 
+			return "kASTnodeLoop";
+		case kASTnodeBreak: 
+			return "kASTnodeBreak";
+		case kASTnodeFuncCall: 
+			return "kASTnodeFuncCall";
     }
 
     return NULL;

@@ -21,6 +21,8 @@ ast_node_t* ParseExpr(parser_t* P);
 ast_node_t* ParseExpr_(parser_t* P, ast_node_t* lhs);
 ast_node_t* ParseValue(parser_t* P);
 ast_node_t* ParseIf(parser_t* P);
+ast_node_t* ParseLoop(parser_t* P);
+ast_node_t* ParseBreak(parser_t* P);
 
 // Private
 token_t peek(parser_t* P);

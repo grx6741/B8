@@ -33,10 +33,12 @@ ast_node_t* ParseStmtList( parser_t* P )
     ast_node_t* node = NULL;
     ast_node_t* next = NULL;
 
-    while ( peek( P ).type == kTokenInt ||        // Declaration
-            peek( P ).type == kTokenIdentifier || // Assignment
-            peek( P ).type == kTokenIf ||         // If
-            peek( P ).type == kTokenOpenBrace     // Block
+    while ( peek( P ).type == kTokenInt			|| // Declaration
+            peek( P ).type == kTokenIdentifier	|| // Assignment
+            peek( P ).type == kTokenLoop		|| // Loop
+            peek( P ).type == kTokenBreak		|| // Break
+            peek( P ).type == kTokenIf			|| // If
+            peek( P ).type == kTokenOpenBrace      // Block
     ) {
         ast_node_t* stmt = ParseStmt( P );
         if ( !node ) {
@@ -68,10 +70,36 @@ ast_node_t* ParseStmt( parser_t* P )
     if ( peek( P ).type == kTokenOpenBrace )
         return ParseBlock( P );
 
+    if ( peek( P ).type == kTokenLoop )
+        return ParseLoop( P );
+
+    if ( peek( P ).type == kTokenBreak )
+        return ParseBreak( P );
+
     LOG_ERROR( "Invalid Statement."
                "Expected \"int\", \"variable\", \"if\", \"{\"\n" );
 
     return NULL;
+}
+
+ast_node_t* ParseLoop(parser_t* P)
+{
+    LOG_INFO( "Parsing Loop\n" );
+	CONSUME(P, kTokenLoop);
+
+	ast_node_t* loop = ASTnode(kASTnodeLoop);
+	loop->loop.block = ParseBlock(P);
+
+	return loop;
+}
+
+ast_node_t* ParseBreak(parser_t* P)
+{
+    LOG_INFO( "Parsing Break\n" );
+	CONSUME(P, kTokenBreak);
+	CONSUME(P, kTokenSemiColon);
+
+	return ASTnode(kASTnodeBreak);
 }
 
 // decl	    := 'int' identifier ';'
@@ -97,7 +125,7 @@ ast_node_t* ParseFuncCall( parser_t* P, token_t func_name_token )
 
 	token_t arg_tok = CONSUME(P, kTokenIdentifier );
 
-	CONSUME( P, kTokenOpenParen );
+	CONSUME( P, kTokenCloseParen );
 
 	CONSUME( P, kTokenSemiColon );
 
@@ -258,12 +286,17 @@ token_t consume( parser_t* P, TokenType type, const char* caller )
                    TokenTypeToStr( P->curr.type ),
                    P->L->row,
                    P->L->col );
+		fprintf(stderr, "%s:%d:%d Expected \"%s\" but got \"%s\"\n", 
+				P->L->file_name, P->L->row, P->L->col, 
+				TokenTypeToStr( type ),
+				TokenTypeToStr( P->curr.type )
+			   );
     }
 
     token_t token = peek( P );
     P->curr = LexerNextToken( P->L );
 
-    // LOG_INFO( "Consumed %s\n", TokenTypeToStr( type ) );
+    LOG_INFO( "Consumed %s\n", TokenTypeToStr( type ) );
 
     return token;
 }

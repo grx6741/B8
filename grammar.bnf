@@ -1,6 +1,7 @@
 program	    := stmt_list
 stmt_list   := stmt*
-stmt	    := decl | assign | if | block | func_call
+stmt	    := decl | assign | if | block 
+			|  func_call | loop | break | continue
 block	    := '{' stmt_list '}'
 
 decl	    := 'int' identifier ';'
@@ -8,7 +9,10 @@ assign	    := identifier '=' expr ';'
 func_call   := identifier '(' identifier ')' ';'
 expr	    := value expr_
 expr_	    := (op value) | <empty>
-if	        := 'if' '(' expr ')' stmt
+if	        := 'if' '(' expr ')' block 'else' block
+loop		:= 'loop' block
+break		:= 'break' ';'
+continue	:= 'continue' ';'
 
 value	    := identifier | constant
-op			:= '+' | '-' | '*' | '/'
+op			:= '+' | '-' | '<' | '>' | '==' | '!=' | '<=' | '>='

@@ -7,13 +7,14 @@
 
 typedef struct {
     FILE* fd;
+	const char* file_name;
     int row;
     int col;
 } lexer_t;
 
 // Public
 
-lexer_t Lexer(FILE* fd);
+lexer_t Lexer(FILE* fd, const char* file_name);
 bool	LexerHasMoreTokens(const lexer_t* L);
 token_t LexerNextToken(lexer_t* L);
 

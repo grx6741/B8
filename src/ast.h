@@ -11,6 +11,8 @@ typedef enum
     kASTnodeIdentifier,
     kASTnodeConstant,
     kASTnodeIf,
+	kASTnodeLoop,
+	kASTnodeBreak,
 	kASTnodeFuncCall
 } ASTnodeType;
 const char* ASTnodeTypeToString( ASTnodeType type );
@@ -73,6 +75,11 @@ typedef struct
 	ast_node_t* arg;
 } ASTfuncCallNode;
 
+typedef struct
+{
+	ast_node_t* block; // List of Statements
+} ASTloopNode;
+
 struct ast_node_t
 {
     ASTnodeType type;
@@ -84,6 +91,7 @@ struct ast_node_t
         ASTvalueNode value;
         ASTifNode if_node;
 		ASTfuncCallNode func_call;
+		ASTloopNode loop;
     };
     // Linked List of Nodes
     ast_node_t* next;
@@ -91,3 +99,4 @@ struct ast_node_t
 
 ast_node_t* ASTnode( ASTnodeType type );
 void ASTnodeLog( ast_node_t* node, int indent_level );
+void ASTfree( ast_node_t* root );

@@ -15,8 +15,10 @@
         - [x] NEQ
     - If
         - [x] Labels
+    - Loop
+        - [ ] Break Shouldn't appear outside a loop
 
-- Command line Args
+- [x] Command line Args
 - Automated Runtime Tests
 - Error Handling
     - [ ] Parser Errors
