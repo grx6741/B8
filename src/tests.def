@@ -1,2 +1,3 @@
-#include "lexer_test.c"
 #include "ht_test.c"
+#include "lexer_test.c"
+#include "parser_test.c"

@@ -4,7 +4,7 @@
 
 TEST(LexerVariableDeclaration) {
     const char* input = "	int \t\t a   \n ;  ";
-    lexer_t L = Lexer(BUFFER(input));
+    lexer_t L = Lexer(BUFFER(input), "temp");
 
     FAIL_IF_NOT(LexerHasMoreTokens(&L), "Expected 3 Tokens\n");
     token_t int_ = LexerNextToken(&L);
@@ -35,7 +35,7 @@ TEST(LexerVariableDeclaration) {
 
 TEST(LexerVariableAssignment) {
     const char* input = "  \na \t=\t20  ;";
-    lexer_t L = Lexer(BUFFER(input));
+    lexer_t L = Lexer(BUFFER(input), "temp");
 
     FAIL_IF_NOT(LexerHasMoreTokens(&L), "Expected 4 Tokens\n");
     token_t id = LexerNextToken(&L);

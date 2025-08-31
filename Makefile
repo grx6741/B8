@@ -14,6 +14,11 @@ IN = input.b8
 CFLAGS   = -ggdb
 LD_FLAGS = -lm
 
+test: $(OBJ) src/test.c
+	gcc -c -o bin/test.o src/test.c
+	gcc -o bin/test $(OBJ) bin/test.o $(CFLAGS) $(LD_FLAGS)
+	./bin/test
+
 $(OUT): $(TARGET)
 	./$(TARGET) $(IN) $(OUT)
 
@@ -24,11 +29,6 @@ $(TARGET): $(OBJ) src/main.c
 run: $(OUT)
 	./8bit-computer/asm/asm.py $(OUT) > 8bit-computer/memory.list
 	make run -C 8bit-computer
-
-test: $(OBJ) src/test.c
-	gcc -c -o bin/test.o src/test.c
-	gcc -o bin/test $(OBJ) bin/test.o $(CFLAGS) $(LD_FLAGS)
-	./bin/test
 
 all: clean run
 

@@ -73,7 +73,7 @@ int main()
         return 0;
 
     size_t failed_test_count = 0;
-    LOG_INFO( "Running %d Tests\n", tests_count );
+    LOG_INFO( "Running %zu Tests\n", tests_count );
 
     for ( int i = 0; i < tests_count; i++ ) {
         test_t test = tests[i];
@@ -96,5 +96,5 @@ int main()
     }
 
     if ( failed_test_count )
-        LOG_ERROR( "%d/%d Tests Failed\n", failed_test_count, tests_count );
+        LOG_ERROR( "%zu/%zu Tests Failed\n", failed_test_count, tests_count );
 }
