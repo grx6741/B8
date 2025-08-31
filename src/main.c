@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "lexer.h"
 #include "parser.h"
@@ -6,21 +7,57 @@
 
 #include <assert.h>
 
-int main()
+char* shift_args(int* argc, char** argv[])
 {
-    FILE* f = fopen( "input.b8", "r" );
+	if (*argc == 0) return NULL;
 
-    lexer_t L = Lexer( f );
+	char* arg = (*argv)[*argc];
+	argv++;
+	(*argc)--;
 
-    parser_t P = Parser( &L );
-    ast_node_t* AST = ParseProgram( &P );
+	return arg;
+}
 
-    ASTnodeLog( AST, 0 );
+void usage(const char* prog_name)
+{
+	printf("Usage: %s <input_file> <output_file>\n", prog_name);
+}
 
-    codegen_context_t ctx = { .stack_pointer = 0xFF };
-    Codegen( &ctx, stdout, AST );
+int main(int argc, char* argv[])
+{
+	// Shift the program name
+	const char* prog_name = shift_args(&argc, &argv);
 
-    fclose( f );
+	const char* input_file = shift_args(&argc, &argv);
+	if (!input_file) {
+		printf("Did not provide input file!\n");
+		usage(prog_name);
+		exit(EXIT_FAILURE);
+	}
+
+	const char* output_file = shift_args(&argc, &argv);
+	if (!output_file) {
+		printf("Did not provide output file!\n");
+		usage(prog_name);
+		exit(EXIT_FAILURE);
+	}
+
+	printf("%s %s %s\n", prog_name, input_file, output_file);
+
+    // FILE* f = fopen( "input.b8", "r" );
+
+    // lexer_t L = Lexer( f );
+
+    // parser_t P = Parser( &L );
+    // ast_node_t* AST = ParseProgram( &P );
+
+    // FILE* out_file = fopen( "output.asm", "w" );
+    // ASTnodeLog( AST, 0 );
+
+    // Codegen( stdout , AST );
+
+    // fclose( out_file );
+    // fclose( f );
 
     return 0;
 }

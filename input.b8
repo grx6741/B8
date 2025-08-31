@@ -1,16 +1,24 @@
 // Variable declaration 
 int a;
 int b; 
-int c; 
+// int c; 
 
 // Assignment 
 a = 1; 
-b = 3; 
-c = 5;
+out(a);
 
-// Conditional 
-if (c > 20) {
-	c = c + 10;
-} else {
-	c = c - 20;
-}
+b = 3; 
+out(b);
+// c = 5;
+// 
+// // Conditional 
+// if (c > 20) {
+// 	int d;
+// 	d = c + 10;
+// } else {
+// 	int e;
+// 	e = c + 20;
+// }
+// 
+// int f;
+// f = c;

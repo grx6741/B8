@@ -22,6 +22,7 @@ size_t __hash( unsigned char* str )
 
 void HTdelete( ht_t* HT )
 {
+	// if ( !HT->elements ) return;
     for ( int i = 0; i < HT->size; i++ ) {
         ht_element_t* e = HT->elements[i];
         if ( !e )
@@ -32,6 +33,8 @@ void HTdelete( ht_t* HT )
     }
 
     free( HT->elements );
+	HT->size = 0;
+	HT->count = 0;
     HT->elements = NULL;
 }
 

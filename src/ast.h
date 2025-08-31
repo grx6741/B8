@@ -11,6 +11,7 @@ typedef enum
     kASTnodeIdentifier,
     kASTnodeConstant,
     kASTnodeIf,
+	kASTnodeFuncCall
 } ASTnodeType;
 const char* ASTnodeTypeToString( ASTnodeType type );
 
@@ -64,6 +65,14 @@ typedef struct
     ast_node_t* else_block; // stmt_list
 } ASTifNode;
 
+// Only One Arg, and that must me an identifier
+// TODO : Add support for literal arg
+typedef struct
+{
+	char name[MAX_IDENTIFIER_NAME_LEN];
+	ast_node_t* arg;
+} ASTfuncCallNode;
+
 struct ast_node_t
 {
     ASTnodeType type;
@@ -74,6 +83,7 @@ struct ast_node_t
         ASTbinaryOpNode binary_op;
         ASTvalueNode value;
         ASTifNode if_node;
+		ASTfuncCallNode func_call;
     };
     // Linked List of Nodes
     ast_node_t* next;

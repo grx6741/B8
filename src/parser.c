@@ -88,6 +88,27 @@ ast_node_t* ParseDecl( parser_t* P )
     return node;
 }
 
+ast_node_t* ParseFuncCall( parser_t* P, token_t func_name_token )
+{
+    ast_node_t* node = ASTnode( kASTnodeFuncCall );
+    strncpy( node->func_call.name, func_name_token.name, MAX_IDENTIFIER_NAME_LEN );
+
+	CONSUME( P, kTokenOpenParen );
+
+	token_t arg_tok = CONSUME(P, kTokenIdentifier );
+
+	CONSUME( P, kTokenOpenParen );
+
+	CONSUME( P, kTokenSemiColon );
+
+	ast_node_t* arg = ASTnode(kASTnodeIdentifier);
+    strncpy( arg->value.name, arg_tok.name, MAX_IDENTIFIER_NAME_LEN );
+
+	node->func_call.arg = arg;
+
+	return node;
+}
+
 // assign := identifier '=' expr ';'
 ast_node_t* ParseAssign( parser_t* P )
 {
@@ -95,6 +116,12 @@ ast_node_t* ParseAssign( parser_t* P )
     ast_node_t* node = ASTnode( kASTnodeAssign );
 
     token_t iden = CONSUME( P, kTokenIdentifier );
+
+	// func_call   := identifier '(' identifier ')' ';'
+	if ( peek( P ).type == kTokenOpenParen ) {
+		return ParseFuncCall( P, iden );
+	}
+
     strncpy( node->assignment.lhs, iden.name, MAX_IDENTIFIER_NAME_LEN );
 
     CONSUME( P, kTokenAssign );

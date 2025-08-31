@@ -12,7 +12,10 @@ CFLAGS   = -ggdb
 LD_FLAGS = -lm
 
 run: $(TARGET)
-	./$(TARGET)
+	./$(TARGET) input.b8 output.asm
+	#cp output.asm 8bit-computer
+	#./8bit-computer/asm/asm.py 8bit-computer/output.asm > 8bit-computer/memory.list
+	#make run -C 8bit-computer
 
 test: $(OBJ) src/test.c
 	gcc -c -o bin/test.o src/test.c
@@ -33,3 +36,4 @@ bin:
 
 clean:
 	rm -rf $(OBJ) $(TARGET)
+	#rm 8bit-computer/output.asm 8bit-computer/memory.list

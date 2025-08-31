@@ -1,13 +1,14 @@
 program	    := stmt_list
 stmt_list   := stmt*
-stmt	    := decl | assign | if | block
+stmt	    := decl | assign | if | block | func_call
 block	    := '{' stmt_list '}'
 
 decl	    := 'int' identifier ';'
 assign	    := identifier '=' expr ';'
+func_call   := identifier '(' identifier ')' ';'
 expr	    := value expr_
 expr_	    := (op value) | <empty>
-if	    := 'if' '(' expr ')' stmt
+if	        := 'if' '(' expr ')' stmt
 
 value	    := identifier | constant
-op	    := '+' | '-' | '*' | '/'
+op			:= '+' | '-' | '*' | '/'

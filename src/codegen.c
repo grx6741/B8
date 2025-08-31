@@ -1,13 +1,17 @@
 #include "codegen.h"
+#include "ast.h"
 #include <stdarg.h>
 #include <assert.h>
+#include <string.h>
 
 #define LOG_ENABLED 1
 #define LOG_PREFIX "CODE_GEN"
 #include "util.h"
 
+void __codegen( codegen_context_t* ctx, FILE* out_stream, const ast_node_t* AST );
+
 uint8_t __ctx_get_symbol_addr( codegen_context_t* ctx, const char* symbol_name) {
-	uint32_t i = ctx->scope_stack_top;
+	int64_t i = ctx->scope_stack_top;
 
 	while (i >= 0) {
 		scope_t* scope = &ctx->scope_stack[i];
@@ -20,12 +24,27 @@ uint8_t __ctx_get_symbol_addr( codegen_context_t* ctx, const char* symbol_name) 
 	return -1;
 }
 
+
+void __codegen_func_call(codegen_context_t* ctx, FILE* out_stream, const ast_node_t* curr)
+{
+	const char* func_name = curr->func_call.name;
+	if ( strcmp(func_name, "out") != 0) {
+		LOG_ERROR("Unsupported Function \"%s\"\n", func_name);
+	}
+
+	const char* arg_name = curr->func_call.arg->value.name;
+	uint8_t arg_addr = __ctx_get_symbol_addr(ctx, arg_name);
+
+	fprintf(out_stream, "mov A M %d; 'A = M[%s]\n", arg_addr, arg_name);
+	fprintf(out_stream, "out 0; out(%s)\n", arg_name);
+}
+
 void __codegen_declaration( codegen_context_t* ctx, FILE* out_stream, const ast_node_t* node )
 {
     scope_t* scope = &ctx->scope_stack[ctx->scope_stack_top];
 
     if ( HTlookup( &scope->addr_table, node->declaration.name ) != NULL ) {
-        LOG_ERROR( "Variable %s Declared Twice\n", node->declaration.name );
+        LOG_ERROR( "Variable \"%s\" Declared Twice\n", node->declaration.name );
         assert( 0 );
     }
 
@@ -38,8 +57,6 @@ void __codegen_declaration( codegen_context_t* ctx, FILE* out_stream, const ast_
 // TODO : So var = a > b is not Supported Now
 void __codegen_expression( codegen_context_t* ctx, FILE* out_stream, const ast_node_t* node )
 {
-    scope_t* scope = &ctx->scope_stack[ctx->scope_stack_top];
-
     if ( node->type == kASTnodeBinaryOp ) {
         // c = v1 op v2 || c1 op v2 || v1 op c2 || v1 + v2
         // where v{1,2} is a variable and c{1,2} is a constant
@@ -123,7 +140,6 @@ void __codegen_expression( codegen_context_t* ctx, FILE* out_stream, const ast_n
  
 void __codegen_assignment( codegen_context_t* ctx, FILE* out_stream, const ast_node_t* node )
 {
-    scope_t* scope = &ctx->scope_stack[ctx->scope_stack_top];
     const char* lhs_name = node->assignment.lhs;
 
     // assert( HTlookup( &scope->addr_table, lhs_name ) );
@@ -140,8 +156,19 @@ void __codegen_if( codegen_context_t* ctx, FILE* out_stream, const ast_node_t* n
 {
 	// asm for condition
 	ast_node_t* condition = node->if_node.condition;
+
+	uint32_t if_block_num = ctx->if_block_counter++;
+
 	__codegen_expression(ctx, out_stream, condition);
+
 	// the condition expression could've been if (1) or if (1 > 3)
+	if ( condition->type == kASTnodeConstant || condition->type == kASTnodeIdentifier )
+	{
+		fprintf( out_stream, "ldi B 0\n" );
+		fprintf( out_stream, "cmp\n" );
+		fprintf( out_stream, "je %%__else%d\n", if_block_num);
+	}
+
 
 	// if not condition, jump to else block
 	switch (condition->binary_op.op) {
@@ -149,68 +176,45 @@ void __codegen_if( codegen_context_t* ctx, FILE* out_stream, const ast_node_t* n
 		case kBinarySub: 
 			break;
 		case kBinaryLT: 
-            fprintf( out_stream, "jnc %%else%d\n", 0);
+            fprintf( out_stream, "je  %%__else%d\n", if_block_num);
+            fprintf( out_stream, "jnc %%__else%d\n", if_block_num);
 			break;
 		case kBinaryLE: 
+            fprintf( out_stream, "je  %%__if%d\n", if_block_num);
+            fprintf( out_stream, "jnc %%__else%d\n", if_block_num);
 			break;
 		case kBinaryGT: 
-            fprintf( out_stream, "jc %%else%d\n", 0);
+            fprintf( out_stream, "je %%__else%d\n", if_block_num);
+            fprintf( out_stream, "jc %%__else%d\n", if_block_num);
 			break;
 		case kBinaryGE: 
+            fprintf( out_stream, "je %%__if%d\n", if_block_num);
+            fprintf( out_stream, "jc %%__else%d\n", if_block_num);
 			break;
 		case kBinaryNE: 
+            fprintf( out_stream, "je %%__else%d\n", if_block_num);
 			break;
 		case kBinaryEQ: 
+            fprintf( out_stream, "jne %%__else%d\n", if_block_num);
 			break;
 		default:
 			LOG_WARN("Unsupported Binary Op %s\n", ASTnodeBinaryTypeToString(condition->binary_op.op));
 	}
-
-	/*
-	 * mov A M[a]
-	 * mov B M[b]
-	 * cmp
-	 * jnc else
-	 * <if>
-	 * else:
-	 * <else>
-	 *
-	 * if ( a < b ) {
-	 *	   if block
-	 * } else {
-	 *	   else block
-	 * }
-	 *
-	 * mov A M[a]
-	 * mov B M[b]
-	 * cmp
-	 * jc else
-	 * <if>
-	 * else:
-	 * <else>
-	 *
-	 * if ( a > b ) {
-	 *	   if block
-	 * } else {
-	 *	   else block
-	 * }
-	 * */
-
-	uint32_t if_block_num = ctx->if_block_counter++;
 	
 	// asm for if block
 	ctx->scope_stack_top++;
-	Codegen(ctx, out_stream, node->if_node.if_block);
-	fprintf(out_stream, "jmp %%endif%d\n", if_block_num);
+	fprintf(out_stream, "__if%d:\n", if_block_num);
+	__codegen(ctx, out_stream, node->if_node.if_block);
+	fprintf(out_stream, "jmp %%__endif%d\n", if_block_num);
 
 	// asm for else block
 	ctx->scope_stack_top++;
-	fprintf(out_stream, "else%d:\n", if_block_num);
-	Codegen(ctx, out_stream, node->if_node.else_block);
-	fprintf(out_stream, "endif%d:\n", if_block_num);
+	fprintf(out_stream, "__else%d:\n", if_block_num);
+	__codegen(ctx, out_stream, node->if_node.else_block);
+	fprintf(out_stream, "__endif%d:\n", if_block_num);
 }
 
-void Codegen( codegen_context_t* ctx, FILE* out_stream, const ast_node_t* AST )
+void __codegen( codegen_context_t* ctx, FILE* out_stream, const ast_node_t* AST )
 {
     scope_t* scope = &ctx->scope_stack[ctx->scope_stack_top];
     HTdelete( &scope->addr_table );
@@ -229,6 +233,8 @@ void Codegen( codegen_context_t* ctx, FILE* out_stream, const ast_node_t* AST )
             case kASTnodeIf:
                 __codegen_if( ctx, out_stream, curr );
                 break;
+			case kASTnodeFuncCall:
+				__codegen_func_call(ctx, out_stream, curr);
             // the rest shouldn't be out in the
             // open, so i dont explicitly handle
             // them for now
@@ -249,4 +255,12 @@ void Codegen( codegen_context_t* ctx, FILE* out_stream, const ast_node_t* AST )
     ctx->stack_pointer = scope->frame_pointer;
     // TODO: Add assembly code to restore the internal stack pointer
     ctx->scope_stack_top--;
+}
+
+void Codegen( FILE* out_stream, const ast_node_t* AST )
+{
+    codegen_context_t ctx = { .stack_pointer = 0xFF };
+	fprintf(out_stream, ".text\n");
+	__codegen(&ctx, out_stream, AST);
+	fprintf(out_stream, "hlt\n");
 }

@@ -28,4 +28,4 @@ typedef struct
 	uint32_t if_block_counter;
 } codegen_context_t;
 
-void Codegen( codegen_context_t* ctx, FILE* out_stream, const ast_node_t* AST );
+void Codegen( FILE* out_stream, const ast_node_t* AST );

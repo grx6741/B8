@@ -1,3 +1,6 @@
+- Parser
+    - [ ] Free the nodes properly
+
 - Codegen
     - Binary Op
         - Arithmetic
@@ -6,9 +9,15 @@
     - Comparision
         - [x] GT
         - [x] LT
-        - [ ] GTE
-        - [ ] LTE
-        - [ ] EQ
-        - [ ] NEQ
+        - [x] GTE
+        - [x] LTE
+        - [x] EQ
+        - [x] NEQ
     - If
         - [x] Labels
+
+- Command line Args
+- Automated Runtime Tests
+- Error Handling
+    - [ ] Parser Errors
+    - [ ] Semantic Errors
