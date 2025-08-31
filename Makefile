@@ -19,12 +19,12 @@ test: $(OBJ) src/test.c
 	gcc -o bin/test $(OBJ) bin/test.o $(CFLAGS) $(LD_FLAGS)
 	./bin/test
 
-$(OUT): $(TARGET)
-	./$(TARGET) $(IN) $(OUT)
-
 $(TARGET): $(OBJ) src/main.c
 	gcc -c -o bin/main.o src/main.c
 	gcc -o $@ $(OBJ) bin/main.o $(CFLAGS) $(LD_FLAGS)
+
+$(OUT): $(TARGET)
+	./$(TARGET) $(IN) $(OUT)
 
 run: $(OUT)
 	./8bit-computer/asm/asm.py $(OUT) > 8bit-computer/memory.list

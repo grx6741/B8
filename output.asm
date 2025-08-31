@@ -1,5 +1,5 @@
 .text
-ldi A 1
+ldi A 0
 mov M A 255; M[a] = 'A
 ldi A 1
 mov M A 254; M[b] = 'A
