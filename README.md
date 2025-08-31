@@ -1,11 +1,11 @@
 # B8
 
 B8 is a very minimal Programming language for this ![8 bit Computer](https://github.com/lightcode/8bit-computer).
-To Build this Compiler see the ![BUILDING](#Building) section
+To Build this Compiler see the [BUILDING](#Building) section
 
 ## Example
 
-A small program that prints all fibbonacci numbers below 100
+A small program that prints all fibonacci numbers below 100
 
 ```rust
 int a;
@@ -119,7 +119,7 @@ Clone this repo along with the submodules
 git clone https://github.com/grx6741/B8.git --recursive
 ```
 
-Running `make` should compile `b8` binary in the project's root directory and also compile the example fibbonacci code and run it.
+Running `make` should compile `b8` binary in the project's root directory and also compile the example fibonacci code and run it.
 
 ```bash
 make
