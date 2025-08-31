@@ -7,15 +7,14 @@
 
 #include <assert.h>
 
-char* shift_args(int* argc, char** argv[])
+char* shift_args(int* argc, char*** argv)
 {
-	if (*argc == 0) return NULL;
+    if (*argc == 0) return NULL;
 
-	char* arg = (*argv)[*argc];
-	argv++;
-	(*argc)--;
-
-	return arg;
+    char* arg = **argv;     // Take the first argument
+    (*argv)++;              // Advance the pointer
+    (*argc)--;              // Decrease count
+    return arg;
 }
 
 void usage(const char* prog_name)
@@ -44,20 +43,20 @@ int main(int argc, char* argv[])
 
 	printf("%s %s %s\n", prog_name, input_file, output_file);
 
-    // FILE* f = fopen( "input.b8", "r" );
+    FILE* f = fopen( input_file, "r" );
 
-    // lexer_t L = Lexer( f );
+    lexer_t L = Lexer( f );
 
-    // parser_t P = Parser( &L );
-    // ast_node_t* AST = ParseProgram( &P );
+    parser_t P = Parser( &L );
+    ast_node_t* AST = ParseProgram( &P );
 
-    // FILE* out_file = fopen( "output.asm", "w" );
-    // ASTnodeLog( AST, 0 );
+    FILE* out_file = fopen( output_file , "w" );
+    ASTnodeLog( AST, 0 );
 
-    // Codegen( stdout , AST );
+    Codegen( out_file , AST );
 
-    // fclose( out_file );
-    // fclose( f );
+    fclose( out_file );
+    fclose( f );
 
     return 0;
 }
