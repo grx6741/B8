@@ -1,6 +1,7 @@
 # B8
 
-B8 is a very minimal Programming language for this ![8 bit Computer](https://github.com/lightcode/8bit-computer)
+B8 is a very minimal Programming language for this ![8 bit Computer](https://github.com/lightcode/8bit-computer).
+To Build this Compiler see the ![BUILDING](##BUILDING) section
 
 ## Example
 
@@ -100,4 +101,35 @@ int a;
 ```cpp
 int a;
 a = 2 * 3 + 5;
+```
+
+## Building
+
+The 8-bit computer repo requires python2, so make sure you have python2 available on your PATH.
+
+To install the required dependencies on ubuntu (should work on any debian derivatives, I've only tested on Debian and Ubuntu), run this command.
+
+```bash
+sudo apt install iverilog gcc make
+```
+
+Clone this repo along with the submodules
+
+```bash
+git clone https://github.com/grx6741/B8.git --recursive
+```
+
+Running `make` should compile `b8` binary in the project's root directory and also compile the example fibbonacci code and run it.
+
+```bash
+make
+```
+
+Now you can use the `b8` compiler with any custom input file
+
+```bash
+echo "int a; a = 10; out(a);" > custom_input.b8
+./b8 custom_input.b8 output.asm
+./8bit-computer/asm/asm.py output.asm > 8bit-computer/memory.list
+make run -C 8bit-computer
 ```
